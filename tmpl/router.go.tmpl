@@ -1,0 +1,31 @@
+package {{.pkg}}
+
+import (
+    "github.com/gocopper/copper/cauth"
+    "github.com/gocopper/copper/chttp"
+    "github.com/gocopper/copper/clogger"
+)
+
+type NewRouterParams struct {
+    RW *chttp.ReaderWriter
+    SessionMW *cauth.VerifySessionMiddleware
+    Logger clogger.Logger
+}
+
+func NewRouter(p NewRouterParams) *Router {
+    return &Router{
+        rw: p.RW,
+        sessionMW: p.SessionMW,
+        logger: p.Logger,
+    }
+}
+
+type Router struct {
+    rw *chttp.ReaderWriter
+    sessionMW *cauth.VerifySessionMiddleware
+    logger clogger.Logger
+}
+
+func (ro *Router) Routes() []chttp.Route {
+    return []chttp.Route{}
+}

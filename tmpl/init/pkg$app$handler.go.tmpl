@@ -1,0 +1,30 @@
+package app
+
+import (
+    "{{.module}}/pkg/web"
+	"net/http"
+
+    "github.com/gocopper/copper/cauth"
+	"github.com/gocopper/copper/chttp"
+)
+
+type NewHTTPHandlerParams struct {
+    Web             *web.Router
+    HTML            *chttp.HTMLRouter
+	RequestLoggerMW *chttp.RequestLoggerMiddleware
+	SetSessionMW    *cauth.SetSessionMiddleware
+}
+
+func NewHTTPHandler(p NewHTTPHandlerParams) http.Handler {
+	return chttp.NewHandler(chttp.NewHandlerParams{
+		GlobalMiddlewares: []chttp.Middleware{
+			p.RequestLoggerMW,
+			p.SetSessionMW,
+		},
+
+		Routers: []chttp.Router{
+		    p.HTML,
+		    p.Web,
+		},
+	})
+}

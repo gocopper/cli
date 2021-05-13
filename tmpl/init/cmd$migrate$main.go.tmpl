@@ -1,0 +1,21 @@
+package main
+
+import (
+	"log"
+
+	"github.com/gocopper/copper"
+)
+
+func main() {
+	app, err := copper.InitApp()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    migrator, err := InitMigrator(app)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    app.Start(migrator)
+}

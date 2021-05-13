@@ -1,0 +1,17 @@
+package {{.pkg}}
+
+import (
+  "gorm.io/gorm"
+)
+
+var ErrRecordNotFound = gorm.ErrRecordNotFound
+
+func NewRepo(db *gorm.DB) *Repo {
+    return &Repo{
+        db: db,
+    }
+}
+
+type Repo struct {
+    db *gorm.DB
+}

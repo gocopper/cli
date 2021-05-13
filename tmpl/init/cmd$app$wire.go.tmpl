@@ -1,0 +1,33 @@
+// +build wireinject
+
+package main
+
+import (
+	"{{.module}}/pkg/app"
+	"{{.module}}/pkg/web"
+
+	"github.com/gocopper/copper"
+    "github.com/gocopper/copper/cauth"
+    "github.com/gocopper/copper/chttp"
+    "github.com/gocopper/copper/csql"
+    "github.com/google/wire"
+)
+
+func InitServer(*copper.App) (*chttp.Server, error) {
+	panic(
+		wire.Build(WireModule),
+	)
+}
+
+var WireModule = wire.NewSet(
+	copper.WireModule,
+	chttp.WireModule,
+	csql.WireModule,
+	cauth.WireModule,
+
+	wire.Struct(new(app.NewHTTPHandlerParams), "*"),
+	app.NewHTTPHandler,
+
+	app.WireModule,
+	web.WireModule,
+)

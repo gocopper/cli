@@ -1,0 +1,13 @@
+export default {
+  server: {
+    port: 3000,
+    strictPort: true,
+  },
+  build: {
+    outDir: 'static',
+    manifest: true,
+    rollupOptions: {
+      input: 'src/main.js'
+    }
+  }
+}
