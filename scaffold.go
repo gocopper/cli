@@ -259,7 +259,6 @@ func (s *Scaffold) scaffoldRouterRoute(pkg string) bool {
 		urlPath       string
 		handlerMethod string
 		httpMethod    string
-		readsBody     bool
 
 		routeSb strings.Builder
 	)
@@ -288,18 +287,7 @@ func (s *Scaffold) scaffoldRouterRoute(pkg string) bool {
 		return false
 	}
 
-	if httpMethod != "Get" {
-		err = survey.AskOne(&survey.Confirm{
-			Message: "Does handler read from request body?",
-			Default: false,
-		}, &readsBody)
-		if err != nil {
-			return false
-		}
-	}
-
 	routeT := template.Must(template.New("Router#ScaffoldRoute.route").Parse(`{
-	Middlewares: []chttp.Middleware{},
 	Path:        "{{.path}}",
 	Methods:     []string{http.Method{{.httpMethod}}},
 	Handler:     ro.{{.handlerMethod}},
@@ -335,38 +323,11 @@ func (s *Scaffold) scaffoldRouterRoute(pkg string) bool {
 
 	handlerT := template.Must(template.New("Router#ScaffoldRoute.handler").Parse(`
 func (ro *Router) {{.handlerMethod}}(w http.ResponseWriter, r *http.Request) {
-	{{if .readsBody}}var body struct{
-		// todo: define body fields with json & validate tags  
-	}
-
-	if !ro.rw.ReadJSON(w, r, &body) {
-		return
-	}
-	{{end}}
-	// todo: call service layer here.
-	// data, err := ro.svc.DoSomething(r.Context())
-	if err != nil {
-		ro.logger.Error("Failed to ...", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// todo: use one of the two options to write response
-
-	// ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
-	// 	PageTemplate: "",
-	// 	Data:         data,
-	// })
-
-	// ro.rw.WriteJSON(w, chttp.WriteJSONParams{
-	// 	Data: data,
-	// })
 }
 `))
 
 	s.term.InProgressTask("Add route handler to router.go")
 	err = sourcecode.AppendTemplateToFile(handlerT, map[string]interface{}{
-		"readsBody":     readsBody,
 		"handlerMethod": handlerMethod,
 	}, routerFilePath)
 	if err != nil {
