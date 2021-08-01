@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gocopper/cli/sourcecode"
+
 	"github.com/gocopper/copper/cerrors"
 	"github.com/radovskyb/watcher"
 )
@@ -32,7 +34,7 @@ type WatchParams struct {
 func (m *Make) Watch(ctx context.Context, p WatchParams) bool {
 	ok := m.Run(ctx, RunParams{
 		ProjectPath: p.ProjectPath,
-		JS:          true,
+		JS:          sourcecode.ProjectHasWeb(p.ProjectPath),
 	})
 	if !ok {
 		return false
@@ -96,6 +98,8 @@ func (m *Make) Run(ctx context.Context, p RunParams) bool {
 		binary = path.Join(p.ProjectPath, "build", path.Base(p.ProjectPath)+"-"+"app.out")
 		cmd    = exec.CommandContext(ctx, binary)
 	)
+
+	p.JS = p.JS && sourcecode.ProjectHasWeb(p.ProjectPath)
 
 	if p.App {
 		ok := m.Build(ctx, BuildParams{
@@ -171,6 +175,9 @@ type BuildParams struct {
 }
 
 func (m *Make) Build(ctx context.Context, p BuildParams) bool {
+	p.Migrate = p.Migrate && sourcecode.ProjectHasSQL(p.ProjectPath)
+	p.JS = p.JS && sourcecode.ProjectHasWeb(p.ProjectPath)
+
 	m.term.Section("Update Dependencies")
 
 	if p.App || p.Migrate {
@@ -303,7 +310,6 @@ func npmRunDev(ctx context.Context, projectPath string) error {
 	cmd.Dir = dir
 
 	cmd.Stdout = &out
-	cmd.Stderr = &out
 
 	go func() {
 		_ = cmd.Run()
