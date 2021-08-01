@@ -310,6 +310,7 @@ func npmRunDev(ctx context.Context, projectPath string) error {
 	cmd.Dir = dir
 
 	cmd.Stdout = &out
+	cmd.Stderr = os.Stderr
 
 	go func() {
 		_ = cmd.Run()
