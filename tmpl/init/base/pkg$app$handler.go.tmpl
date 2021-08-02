@@ -1,0 +1,21 @@
+package app
+
+import (
+	"net/http"
+
+	"github.com/gocopper/copper/chttp"
+)
+
+type NewHTTPHandlerParams struct {
+	RequestLoggerMW *chttp.RequestLoggerMiddleware
+}
+
+func NewHTTPHandler(p NewHTTPHandlerParams) http.Handler {
+	return chttp.NewHandler(chttp.NewHandlerParams{
+		GlobalMiddlewares: []chttp.Middleware{
+			p.RequestLoggerMW,
+		},
+
+		Routers: []chttp.Router{},
+	})
+}

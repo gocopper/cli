@@ -28,13 +28,26 @@ const (
 var TemplatesFS embed.FS
 
 type Scaffold struct {
-	initTmpl *template.Template
-	pkgTmpl  *template.Template
-	term     *Terminal
+	initBaseTmpl *template.Template
+	initSQLTmpl  *template.Template
+	initWebTmpl  *template.Template
+
+	pkgTmpl *template.Template
+	term    *Terminal
 }
 
 func NewScaffold() *Scaffold {
-	initTmpl, err := template.ParseFS(TemplatesFS, "tmpl/init/*.tmpl")
+	initBaseTmpl, err := template.ParseFS(TemplatesFS, "tmpl/init/base/*.tmpl")
+	if err != nil {
+		panic(err)
+	}
+
+	initSQLTmpl, err := template.ParseFS(TemplatesFS, "tmpl/init/sql/*.tmpl")
+	if err != nil {
+		panic(err)
+	}
+
+	initWebTmpl, err := template.ParseFS(TemplatesFS, "tmpl/init/web/*.tmpl")
 	if err != nil {
 		panic(err)
 	}
@@ -45,14 +58,20 @@ func NewScaffold() *Scaffold {
 	}
 
 	return &Scaffold{
-		initTmpl: initTmpl,
-		pkgTmpl:  pkgTmpl,
-		term:     NewTerminal(),
+		initBaseTmpl: initBaseTmpl,
+		initSQLTmpl:  initSQLTmpl,
+		initWebTmpl:  initWebTmpl,
+		pkgTmpl:      pkgTmpl,
+		term:         NewTerminal(),
 	}
 }
 
 func (s *Scaffold) Init() bool {
-	var module string
+	var (
+		module string
+		web    bool
+		sql    bool
+	)
 
 	err := survey.AskOne(&survey.Input{
 		Message: "What's the module name for your project?",
@@ -62,16 +81,98 @@ func (s *Scaffold) Init() bool {
 		return false
 	}
 
+	err = survey.AskOne(&survey.Confirm{
+		Message: "Will your app use SQL for storage?",
+	}, &sql)
+	if err != nil {
+		return false
+	}
+
+	err = survey.AskOne(&survey.Confirm{
+		Message: "Does your app have a single-page web app (React, Vue, etc.)?",
+	}, &sql)
+	if err != nil {
+		return false
+	}
+
 	project := strcase.ToLowerCamel(path.Base(module))
+	workDir := path.Base(module)
+	params := map[string]string{
+		"module":      module,
+		"project":     project,
+		"initProject": "Init" + strcase.ToCamel(path.Base(module)),
+	}
 
 	s.term.Section("Create Project Files")
 
-	for _, t := range s.initTmpl.Templates() {
+	if ok := s.scaffoldTemplate(s.initBaseTmpl, workDir, params); !ok {
+		return false
+	}
+
+	if web {
+		err := os.Remove(path.Join(workDir, "pkg", "app", "handler.go"))
+		if err != nil {
+			s.term.Error(cerrors.New(err, "Failed to add delete pkg/app/handler.go", nil))
+			return false
+		}
+
+		err = os.Remove(path.Join(workDir, "config", "dev.toml"))
+		if err != nil {
+			s.term.Error(cerrors.New(err, "Failed to add delete config/dev.toml", nil))
+			return false
+		}
+
+		ok := s.scaffoldTemplate(s.initWebTmpl, workDir, params)
+		if !ok {
+			return false
+		}
+
+		err = sourcecode.AddImports(path.Join(workDir, "cmd", "app", "wire.go"), []string{
+			"github.com/gocopper/copper/chtml",
+			path.Join(module, "pkg", "web"),
+		})
+		if err != nil {
+			s.term.Error(cerrors.New(err, "Failed to add deps to pkg/app/wire.go", nil))
+			return false
+		}
+
+		err = sourcecode.InsertWireModuleItem(path.Join(workDir, "cmd", "app"), `
+chtml.WireModule,
+web.WireModule,
+`)
+		if err != nil {
+			s.term.Error(cerrors.New(err, "Failed to add web module to app", nil))
+			return false
+		}
+	}
+
+	if sql {
+		err = os.Remove(path.Join(workDir, "config", "secrets.toml"))
+		if err != nil {
+			s.term.Error(cerrors.New(err, "Failed to add delete config/secrets.toml", nil))
+			return false
+		}
+
+		ok := s.scaffoldTemplate(s.initSQLTmpl, workDir, params)
+		if !ok {
+			return false
+		}
+	}
+
+	s.term.Section("First Commands")
+	s.term.Box(fmt.Sprintf(`cd %s
+copper build
+copper watch`, project))
+
+	return true
+}
+
+func (s *Scaffold) scaffoldTemplate(tmpl *template.Template, dir string, params map[string]string) bool {
+	for _, t := range tmpl.Templates() {
 		filePath := strings.ReplaceAll(t.Name(), "$", "/")
 		filePath = strings.Replace(filePath, ".tmpl", "", 1)
 		filePath = strings.Replace(filePath, "^", ".", 1)
-		filePath = path.Join(path.Base(module), filePath)
-		initProject := "Init" + strcase.ToCamel(path.Base(module))
+		filePath = path.Join(dir, filePath)
 
 		s.term.InProgressTask(fmt.Sprintf("Create %s", filePath))
 
@@ -81,11 +182,7 @@ func (s *Scaffold) Init() bool {
 			return false
 		}
 
-		err = sourcecode.CreateTemplateFile(filePath, t, map[string]string{
-			"module":      module,
-			"project":     project,
-			"initProject": initProject,
-		})
+		err = sourcecode.CreateTemplateFile(filePath, t, params)
 		if err != nil {
 			s.term.TaskFailed(cerrors.New(err, fmt.Sprintf("Failed to create %s", filePath), nil))
 			return false
@@ -93,11 +190,6 @@ func (s *Scaffold) Init() bool {
 
 		s.term.TaskSucceeded()
 	}
-
-	s.term.Section("First Commands")
-	s.term.Box(fmt.Sprintf(`cd %s
-copper build
-copper watch`, project))
 
 	return true
 }
@@ -138,14 +230,16 @@ func (s *Scaffold) promptForScaffolder(pkg string) (string, bool) {
 
 	opts := make([]string, 0)
 
-	_, err := os.Stat(repoFilePath)
-	if err == nil {
-		opts = append(opts, ScaffolderRepoQuery, ScaffolderRepoSave)
-	} else {
-		opts = append(opts, ScaffolderRepo)
+	if sourcecode.ProjectHasSQL(".") {
+		_, err := os.Stat(repoFilePath)
+		if err == nil {
+			opts = append(opts, ScaffolderRepoQuery, ScaffolderRepoSave)
+		} else if sourcecode.ProjectHasSQL(".") {
+			opts = append(opts, ScaffolderRepo)
+		}
 	}
 
-	_, err = os.Stat(routerFilePath)
+	_, err := os.Stat(routerFilePath)
 	if err == nil {
 		opts = append(opts, ScaffolderRouterRoute)
 	} else {

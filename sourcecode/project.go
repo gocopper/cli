@@ -6,7 +6,7 @@ import (
 )
 
 func ProjectHasWeb(projectPath string) bool {
-	_, err := os.Stat(path.Join(projectPath, "pkg", "web"))
+	_, err := os.Stat(path.Join(projectPath, "pkg", "web", "vite.config.js"))
 
 	return err == nil
 }

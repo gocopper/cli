@@ -3,7 +3,7 @@ package web
 import (
 	"embed"
 
-	"github.com/gocopper/copper/chttp"
+	"github.com/gocopper/copper/chtml"
 	"github.com/google/wire"
 )
 
@@ -18,10 +18,7 @@ var (
 )
 
 var WireModule = wire.NewSet(
-	wire.InterfaceValue(new(chttp.HTMLDir), HTMLDir),
-	wire.InterfaceValue(new(chttp.StaticDir), StaticDir),
-
-	wire.Struct(new(NewRouterParams), "*"),
-	NewRouter,
+	wire.InterfaceValue(new(chtml.HTMLDir), HTMLDir),
+	wire.InterfaceValue(new(chtml.StaticDir), StaticDir),
 )
 
