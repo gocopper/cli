@@ -147,9 +147,9 @@ web.WireModule,
 	}
 
 	if sql {
-		err = os.Remove(path.Join(workDir, "config", "secrets.toml"))
+		err = os.Remove(path.Join(workDir, "config", "local.toml"))
 		if err != nil {
-			s.term.Error(cerrors.New(err, "Failed to add delete config/secrets.toml", nil))
+			s.term.Error(cerrors.New(err, "Failed to add delete config/local.toml", nil))
 			return false
 		}
 

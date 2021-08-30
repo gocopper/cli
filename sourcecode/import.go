@@ -2,10 +2,11 @@ package sourcecode
 
 import (
 	"fmt"
-	"github.com/gocopper/copper/cerrors"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/gocopper/copper/cerrors"
 )
 
 func AddImports(path string, deps []string) error {
