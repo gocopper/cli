@@ -90,7 +90,7 @@ func (s *Scaffold) Init() bool {
 
 	err = survey.AskOne(&survey.Confirm{
 		Message: "Does your app have a single-page web app (React, Vue, etc.)?",
-	}, &sql)
+	}, &web)
 	if err != nil {
 		return false
 	}
