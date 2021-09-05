@@ -15,6 +15,7 @@ import (
 	"github.com/gocopper/cli/sourcecode"
 
 	"github.com/gocopper/copper/cerrors"
+	"github.com/otiai10/copy"
 	"github.com/radovskyb/watcher"
 )
 
@@ -42,7 +43,7 @@ type WatchParams struct {
 func (m *Make) Watch(ctx context.Context, p WatchParams) bool {
 	ok := m.Run(ctx, RunParams{
 		ProjectPath: p.ProjectPath,
-		JS:          sourcecode.ProjectHasWeb(p.ProjectPath),
+		JS:          sourcecode.ProjectHasJS(p.ProjectPath),
 	})
 	if !ok {
 		return false
@@ -107,7 +108,7 @@ func (m *Make) Run(ctx context.Context, p RunParams) bool {
 		cmd    = exec.CommandContext(ctx, binary)
 	)
 
-	p.JS = p.JS && sourcecode.ProjectHasWeb(p.ProjectPath)
+	p.JS = p.JS && sourcecode.ProjectHasJS(p.ProjectPath)
 
 	ok := m.Build(ctx, BuildParams{
 		ProjectPath: p.ProjectPath,
@@ -183,12 +184,26 @@ type BuildParams struct {
 
 func (m *Make) Build(ctx context.Context, p BuildParams) bool {
 	p.Migrate = p.Migrate && sourcecode.ProjectHasSQL(p.ProjectPath)
-	p.JS = p.JS && sourcecode.ProjectHasWeb(p.ProjectPath)
+	p.JS = p.JS && sourcecode.ProjectHasJS(p.ProjectPath)
 
-	webEmbedGoFilePath := path.Join(p.ProjectPath, "web", "build", "embed.go")
-	if _, err := os.Stat(webEmbedGoFilePath); p.JS && err != nil {
+	if sourcecode.ProjectHasWeb(p.ProjectPath) {
+		m.term.Section("Embed web files")
+	}
+
+	// if there are web files but no vite configured, we have to move web/public dir -> web/build/static here
+	if sourcecode.ProjectHasWeb(p.ProjectPath) && !p.JS {
+		m.term.InProgressTask("Copy web static assets to web/build/static")
+		err := copy.Copy(filepath.Join(p.ProjectPath, "web", "public"), filepath.Join(p.ProjectPath, "web", "build", "static"))
+		if err != nil {
+			m.term.TaskFailed(cerrors.New(err, "Failed to copy web static assets", nil))
+			return false
+		}
+		m.term.TaskSucceeded()
+	}
+
+	if sourcecode.ProjectHasWeb(p.ProjectPath) {
 		m.term.InProgressTask("Generate web/build/embed.go")
-		err := sourcecode.CreateTemplateFile(webEmbedGoFilePath, m.webTmpl.Lookup("embed.go.tmpl"), nil)
+		err := sourcecode.CreateTemplateFile(path.Join(p.ProjectPath, "web", "build", "embed.go"), m.webTmpl.Lookup("embed.go.tmpl"), nil)
 		if err != nil {
 			m.term.TaskFailed(cerrors.New(err, "Failed to generate web/build/embed.go", nil))
 			return false

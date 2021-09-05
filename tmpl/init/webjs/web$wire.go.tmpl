@@ -1,0 +1,20 @@
+package web
+
+import (
+	"embed"
+
+	"github.com/gocopper/copper/chtml"
+	"github.com/google/wire"
+
+	"{{.module}}/web/build"
+)
+
+//nolint:golint
+//go:embed src
+var HTMLDir embed.FS
+
+var WireModule = wire.NewSet(
+	wire.InterfaceValue(new(chtml.HTMLDir), HTMLDir),
+	wire.InterfaceValue(new(chtml.StaticDir), build.StaticDir),
+)
+

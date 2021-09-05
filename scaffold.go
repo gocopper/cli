@@ -29,9 +29,10 @@ const (
 var TemplatesFS embed.FS
 
 type Scaffold struct {
-	initBaseTmpl *template.Template
-	initSQLTmpl  *template.Template
-	initWebTmpl  *template.Template
+	initBaseTmpl  *template.Template
+	initSQLTmpl   *template.Template
+	initWebTmpl   *template.Template
+	initWebJSTmpl *template.Template
 
 	pkgTmpl *template.Template
 	term    *Terminal
@@ -54,18 +55,24 @@ func NewScaffold() *Scaffold {
 		panic(err)
 	}
 
+	initWebJSTmpl, err := template.ParseFS(TemplatesFS, "tmpl/init/webjs/*.tmpl")
+	if err != nil {
+		panic(err)
+	}
+
 	pkgTmpl, err := template.ParseFS(TemplatesFS, "tmpl/*.tmpl")
 	if err != nil {
 		panic(err)
 	}
 
 	return &Scaffold{
-		initBaseTmpl: initBaseTmpl,
-		initSQLTmpl:  initSQLTmpl,
-		initWebTmpl:  initWebTmpl,
-		pkgTmpl:      pkgTmpl,
-		make:         NewMake(),
-		term:         NewTerminal(),
+		initBaseTmpl:  initBaseTmpl,
+		initSQLTmpl:   initSQLTmpl,
+		initWebTmpl:   initWebTmpl,
+		initWebJSTmpl: initWebJSTmpl,
+		pkgTmpl:       pkgTmpl,
+		make:          NewMake(),
+		term:          NewTerminal(),
 	}
 }
 
@@ -73,6 +80,7 @@ func (s *Scaffold) Init() bool {
 	var (
 		module string
 		web    bool
+		js     bool
 		sql    bool
 	)
 
@@ -92,10 +100,19 @@ func (s *Scaffold) Init() bool {
 	}
 
 	err = survey.AskOne(&survey.Confirm{
-		Message: "Does your app have a single-page web app (React, Vue, etc.)?",
+		Message: "Will your app serve HTML pages?",
 	}, &web)
 	if err != nil {
 		return false
+	}
+
+	if web {
+		err = survey.AskOne(&survey.Confirm{
+			Message: "Will you be using JS or CSS frameworks? (React, Vue, Tailwind, Boostrap, etc.)",
+		}, &js)
+		if err != nil {
+			return false
+		}
 	}
 
 	project := strcase.ToLowerCamel(path.Base(module))
@@ -124,13 +141,24 @@ func (s *Scaffold) Init() bool {
 			return false
 		}
 
+		err = os.Remove(path.Join(workDir, "config", "base.toml"))
+		if err != nil {
+			s.term.Error(cerrors.New(err, "Failed to add delete config/base.toml", nil))
+			return false
+		}
+
 		err = os.Remove(path.Join(workDir, "config", "dev.toml"))
 		if err != nil {
 			s.term.Error(cerrors.New(err, "Failed to add delete config/dev.toml", nil))
 			return false
 		}
 
-		ok := s.scaffoldTemplate(s.initWebTmpl, workDir, params)
+		tmpl := s.initWebTmpl
+		if js {
+			tmpl = s.initWebJSTmpl
+		}
+
+		ok := s.scaffoldTemplate(tmpl, workDir, params)
 		if !ok {
 			return false
 		}
