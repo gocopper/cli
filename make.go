@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/gocopper/cli/sourcecode"
@@ -18,12 +19,19 @@ import (
 )
 
 type Make struct {
-	term *Terminal
+	term    *Terminal
+	webTmpl *template.Template
 }
 
 func NewMake() *Make {
+	webTmpl, err := template.ParseFS(TemplatesFS, "tmpl/web/*.tmpl")
+	if err != nil {
+		panic(err)
+	}
+
 	return &Make{
-		term: NewTerminal(),
+		term:    NewTerminal(),
+		webTmpl: webTmpl,
 	}
 }
 
@@ -101,14 +109,13 @@ func (m *Make) Run(ctx context.Context, p RunParams) bool {
 
 	p.JS = p.JS && sourcecode.ProjectHasWeb(p.ProjectPath)
 
-	if p.App {
-		ok := m.Build(ctx, BuildParams{
-			ProjectPath: p.ProjectPath,
-			App:         true,
-		})
-		if !ok {
-			return false
-		}
+	ok := m.Build(ctx, BuildParams{
+		ProjectPath: p.ProjectPath,
+		App:         p.App,
+		JS:          p.JS,
+	})
+	if !ok {
+		return false
 	}
 
 	if p.JS {
@@ -178,6 +185,17 @@ func (m *Make) Build(ctx context.Context, p BuildParams) bool {
 	p.Migrate = p.Migrate && sourcecode.ProjectHasSQL(p.ProjectPath)
 	p.JS = p.JS && sourcecode.ProjectHasWeb(p.ProjectPath)
 
+	webEmbedGoFilePath := path.Join(p.ProjectPath, "web", "build", "embed.go")
+	if _, err := os.Stat(webEmbedGoFilePath); p.JS && err != nil {
+		m.term.InProgressTask("Generate web/build/embed.go")
+		err := sourcecode.CreateTemplateFile(webEmbedGoFilePath, m.webTmpl.Lookup("embed.go.tmpl"), nil)
+		if err != nil {
+			m.term.TaskFailed(cerrors.New(err, "Failed to generate web/build/embed.go", nil))
+			return false
+		}
+		m.term.TaskSucceeded()
+	}
+
 	m.term.Section("Update Dependencies")
 
 	if p.App || p.Migrate {
@@ -201,12 +219,12 @@ func (m *Make) Build(ctx context.Context, p BuildParams) bool {
 	}
 
 	if p.App || p.Migrate {
-		m.term.Section("Generate wire files")
+		m.term.Section("Generate Wire files")
 	}
 
 	if p.Migrate {
 		m.term.InProgressTask("wire cmd/migrate")
-		err := wireGen(ctx, path.Join(p.ProjectPath, "cmd", "migrate"))
+		err := wireGen(ctx, p.ProjectPath, path.Join(p.ProjectPath, "cmd", "migrate"))
 		if err != nil {
 			m.term.TaskFailed(cerrors.New(err, "Failed to generate wire files in cmd/migrate", nil))
 			return false
@@ -216,7 +234,7 @@ func (m *Make) Build(ctx context.Context, p BuildParams) bool {
 
 	if p.App {
 		m.term.InProgressTask("wire cmd/app")
-		err := wireGen(ctx, path.Join(p.ProjectPath, "cmd", "app"))
+		err := wireGen(ctx, p.ProjectPath, path.Join(p.ProjectPath, "cmd", "app"))
 		if err != nil {
 			m.term.TaskFailed(cerrors.New(err, "Failed to generate wire files in cmd/app", nil))
 			return false
@@ -233,6 +251,7 @@ func (m *Make) Build(ctx context.Context, p BuildParams) bool {
 			m.term.TaskFailed(cerrors.New(err, "Failed to bundle JS", nil))
 			return false
 		}
+
 		m.term.TaskSucceeded()
 	}
 
@@ -276,6 +295,8 @@ func goBuild(ctx context.Context, p BuildParams, main string) error {
 		cmd = exec.CommandContext(ctx, "go", "build", "-tags", "csql_sqlite", "-o", out, main)
 	)
 
+	cmd.Dir = p.ProjectPath
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return errors.New(string(output))
@@ -286,7 +307,7 @@ func goBuild(ctx context.Context, p BuildParams, main string) error {
 
 func npmInstall(ctx context.Context, projectPath string) error {
 	var (
-		dir = path.Join(projectPath, "pkg", "web")
+		dir = path.Join(projectPath, "web")
 		cmd = exec.CommandContext(ctx, "npm", "install")
 	)
 
@@ -302,7 +323,7 @@ func npmInstall(ctx context.Context, projectPath string) error {
 
 func npmRunDev(ctx context.Context, projectPath string) error {
 	var (
-		dir = path.Join(projectPath, "pkg", "web")
+		dir = path.Join(projectPath, "web")
 		cmd = exec.CommandContext(ctx, "npm", "run", "dev")
 		out strings.Builder
 	)
@@ -327,7 +348,7 @@ func npmRunDev(ctx context.Context, projectPath string) error {
 
 func npmScript(ctx context.Context, projectPath, script string) error {
 	var (
-		dir = path.Join(projectPath, "pkg", "web")
+		dir = path.Join(projectPath, "web")
 		cmd = exec.CommandContext(ctx, "npm", "run", script)
 	)
 
@@ -341,10 +362,10 @@ func npmScript(ctx context.Context, projectPath, script string) error {
 	return nil
 }
 
-func wireGen(ctx context.Context, main string) error {
-	var (
-		cmd = exec.CommandContext(ctx, "wire", "gen", main)
-	)
+func wireGen(ctx context.Context, projectPath, main string) error {
+	cmd := exec.CommandContext(ctx, "wire", "gen", main)
+
+	cmd.Dir = projectPath
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -356,6 +377,8 @@ func wireGen(ctx context.Context, main string) error {
 
 func goModTidy(ctx context.Context, p BuildParams) error {
 	cmd := exec.CommandContext(ctx, "go", "mod", "tidy")
+
+	cmd.Dir = p.ProjectPath
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

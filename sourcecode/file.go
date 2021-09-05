@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"text/template"
 
 	"github.com/gocopper/copper/cerrors"
@@ -43,6 +44,11 @@ func insertText(path, text string, offset int) error {
 }
 
 func CreateTemplateFile(path string, t *template.Template, data interface{}) error {
+	err := os.MkdirAll(filepath.Dir(path), 0755)
+	if err != nil {
+		return err
+	}
+
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil && os.IsExist(err) {
 		return nil

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -34,6 +35,7 @@ type Scaffold struct {
 
 	pkgTmpl *template.Template
 	term    *Terminal
+	make    *Make
 }
 
 func NewScaffold() *Scaffold {
@@ -62,6 +64,7 @@ func NewScaffold() *Scaffold {
 		initSQLTmpl:  initSQLTmpl,
 		initWebTmpl:  initWebTmpl,
 		pkgTmpl:      pkgTmpl,
+		make:         NewMake(),
 		term:         NewTerminal(),
 	}
 }
@@ -96,7 +99,12 @@ func (s *Scaffold) Init() bool {
 	}
 
 	project := strcase.ToLowerCamel(path.Base(module))
-	workDir := path.Base(module)
+
+	workDir, err := filepath.Abs(path.Base(module))
+	if err != nil {
+		return false
+	}
+
 	params := map[string]string{
 		"module":      module,
 		"project":     project,
@@ -129,7 +137,7 @@ func (s *Scaffold) Init() bool {
 
 		err = sourcecode.AddImports(path.Join(workDir, "cmd", "app", "wire.go"), []string{
 			"github.com/gocopper/copper/chtml",
-			path.Join(module, "pkg", "web"),
+			path.Join(module, "web"),
 		})
 		if err != nil {
 			s.term.Error(cerrors.New(err, "Failed to add deps to pkg/app/wire.go", nil))

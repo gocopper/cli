@@ -5,20 +5,16 @@ import (
 
 	"github.com/gocopper/copper/chtml"
 	"github.com/google/wire"
+
+	"{{.module}}/web/build"
 )
 
-var (
-	//nolint:golint
-	//go:embed src
-	HTMLDir embed.FS
-
-	//nolint:golint
-	//go:embed static
-	StaticDir embed.FS
-)
+//nolint:golint
+//go:embed src
+var HTMLDir embed.FS
 
 var WireModule = wire.NewSet(
 	wire.InterfaceValue(new(chtml.HTMLDir), HTMLDir),
-	wire.InterfaceValue(new(chtml.StaticDir), StaticDir),
+	wire.InterfaceValue(new(chtml.StaticDir), build.StaticDir),
 )
 
