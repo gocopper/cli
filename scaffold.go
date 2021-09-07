@@ -92,12 +92,15 @@ func (s *Scaffold) Init() bool {
 		return false
 	}
 
-	err = survey.AskOne(&survey.Confirm{
-		Message: "Will your app use SQL for storage?",
-	}, &sql)
-	if err != nil {
-		return false
-	}
+	/*
+		TODO: enable sql scaffolding when csql is moved to gocopper/copper
+		err = survey.AskOne(&survey.Confirm{
+			Message: "Will your app use SQL for storage?",
+		}, &sql)
+		if err != nil {
+			return false
+		}
+	*/
 
 	err = survey.AskOne(&survey.Confirm{
 		Message: "Will your app serve HTML pages?",
