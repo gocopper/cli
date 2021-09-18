@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gocopper/copper"
 )
@@ -14,8 +15,9 @@ func main() {
 
 	server, err := InitServer(app)
 	if err != nil {
-		log.Fatal(err)
-	}
+        app.Logger.Error("Failed to init server", err)
+        os.Exit(1)
+    }
 
 	app.Start(server)
 }
