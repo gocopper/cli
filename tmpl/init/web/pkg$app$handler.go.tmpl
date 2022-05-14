@@ -5,12 +5,16 @@ import (
 
 	"github.com/gocopper/copper/chttp"
 	"github.com/gocopper/copper/chtml"
+	"github.com/gocopper/copper/clogger"
 )
 
 type NewHTTPHandlerParams struct {
 	RequestLoggerMW *chttp.RequestLoggerMiddleware
 
 	HTML *chtml.Router
+	App *Router
+
+	Logger clogger.Logger
 }
 
 func NewHTTPHandler(p NewHTTPHandlerParams) http.Handler {
@@ -21,6 +25,9 @@ func NewHTTPHandler(p NewHTTPHandlerParams) http.Handler {
 
 		Routers: []chttp.Router{
 		    p.HTML,
+		    p.App,
 		},
+
+		Logger: p.Logger,
 	})
 }
