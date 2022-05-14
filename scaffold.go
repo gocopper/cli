@@ -92,15 +92,12 @@ func (s *Scaffold) Init() bool {
 		return false
 	}
 
-	/*
-		TODO: enable sql scaffolding when csql is moved to gocopper/copper
-		err = survey.AskOne(&survey.Confirm{
-			Message: "Will your app use SQL for storage?",
-		}, &sql)
-		if err != nil {
-			return false
-		}
-	*/
+	err = survey.AskOne(&survey.Confirm{
+		Message: "Will your app use SQL for storage?",
+	}, &sql)
+	if err != nil {
+		return false
+	}
 
 	err = survey.AskOne(&survey.Confirm{
 		Message: "Will your app serve HTML pages?",
@@ -109,14 +106,17 @@ func (s *Scaffold) Init() bool {
 		return false
 	}
 
-	if web {
-		err = survey.AskOne(&survey.Confirm{
-			Message: "Will you be using JS or CSS frameworks? (React, Vue, Tailwind, Boostrap, etc.)",
-		}, &js)
-		if err != nil {
-			return false
+	/*
+		Disable special handling for JS or CSS frameworks
+		if web {
+			err = survey.AskOne(&survey.Confirm{
+				Message: "Will you be using JS or CSS frameworks? (React, Vue, Tailwind, Boostrap, etc.)",
+			}, &js)
+			if err != nil {
+				return false
+			}
 		}
-	}
+	*/
 
 	project := strcase.ToLowerCamel(path.Base(module))
 
@@ -192,9 +192,17 @@ web.WireModule,
 	}
 
 	if sql {
-		err = os.Remove(path.Join(workDir, "config", "local.toml"))
+		t := template.Must(template.New("csql#Config").Parse(`
+[csql]
+dialect="sqlite"
+dsn="./{{.project}}.db"
+`))
+
+		err = sourcecode.AppendTemplateToFile(t, map[string]interface{}{
+			"project": project,
+		}, path.Join(workDir, "config", "base.toml"))
 		if err != nil {
-			s.term.Error(cerrors.New(err, "Failed to add delete config/local.toml", nil))
+			s.term.TaskFailed(cerrors.New(err, "Failed to update config/base.toml", nil))
 			return false
 		}
 
