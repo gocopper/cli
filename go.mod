@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.12
-	github.com/gocopper/copper v0.3.4
+	github.com/gocopper/copper v0.4.0
 	github.com/google/subcommands v1.2.0
 	github.com/iancoleman/strcase v0.1.3
 	github.com/jinzhu/inflection v1.0.0

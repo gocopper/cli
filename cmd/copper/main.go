@@ -16,6 +16,7 @@ func main() {
 	subcommands.Register(NewCmdRun(), "")
 	subcommands.Register(NewCmdWatch(), "")
 	subcommands.Register(NewCmdScaffold(), "")
+	subcommands.Register(NewCmdVersion(), "")
 
 	flag.Parse()
 
