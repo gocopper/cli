@@ -673,6 +673,14 @@ func (s *Scaffold) scaffoldPkgIfNeeded(name string) bool {
 
 	s.term.Section("Scaffold Package")
 
+	projectModule, err := sourcecode.GetGoModulePath(".")
+	if err != nil {
+		s.term.TaskFailed(cerrors.New(err, "Failed to get project module", nil))
+		return false
+	}
+
+	pkgImportPath := path.Join(projectModule, "pkg", name)
+
 	s.term.InProgressTask("Create pkg dir")
 	err = os.Mkdir(pkgDir, 0755)
 	if err != nil {
@@ -697,6 +705,22 @@ func (s *Scaffold) scaffoldPkgIfNeeded(name string) bool {
 	})
 	if err != nil {
 		s.term.TaskFailed(cerrors.New(err, "Failed to create wire.go", nil))
+		return false
+	}
+	s.term.TaskSucceeded()
+
+	s.term.InProgressTask("Update pkg/app/wire.go")
+	err = sourcecode.AddImports(path.Join("pkg", "app", "wire.go"), []string{pkgImportPath})
+	if err != nil {
+		s.term.TaskFailed(cerrors.New(err, "Failed to update pkg/app/wire.go imports", nil))
+		return false
+	}
+
+	err = sourcecode.InsertWireModuleItem(path.Join("pkg", "app"), fmt.Sprintf(`
+%s.WireModule,
+`, name))
+	if err != nil {
+		s.term.TaskFailed(cerrors.New(err, "Failed to update pkg/app/wire.go WireModule", nil))
 		return false
 	}
 	s.term.TaskSucceeded()
