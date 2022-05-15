@@ -138,12 +138,6 @@ func (s *Scaffold) Init() bool {
 	}
 
 	if web {
-		err := os.Remove(path.Join(workDir, "pkg", "app", "wire.go"))
-		if err != nil {
-			s.term.Error(cerrors.New(err, "Failed to add delete pkg/app/handler.go", nil))
-			return false
-		}
-
 		err = os.Remove(path.Join(workDir, "pkg", "app", "handler.go"))
 		if err != nil {
 			s.term.Error(cerrors.New(err, "Failed to add delete pkg/app/handler.go", nil))
@@ -184,6 +178,8 @@ func (s *Scaffold) Init() bool {
 		err = sourcecode.InsertWireModuleItem(path.Join(workDir, "cmd", "app"), `
 chtml.WireModule,
 web.WireModule,
+app.NewRouter,
+wire.Struct(new(app.NewRouterParams), "*"),
 `)
 		if err != nil {
 			s.term.Error(cerrors.New(err, "Failed to add web module to app", nil))
