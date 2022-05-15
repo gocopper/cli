@@ -206,6 +206,22 @@ dsn="./{{.project}}.db"
 			return false
 		}
 
+		err = sourcecode.AddImports(path.Join(workDir, "cmd", "app", "wire.go"), []string{
+			"github.com/gocopper/pkg/csql",
+		})
+		if err != nil {
+			s.term.Error(cerrors.New(err, "Failed to add csql deps to pkg/app/wire.go", nil))
+			return false
+		}
+
+		err = sourcecode.InsertWireModuleItem(path.Join(workDir, "cmd", "app"), `
+csql.WireModule,
+`)
+		if err != nil {
+			s.term.Error(cerrors.New(err, "Failed to add csql module to app", nil))
+			return false
+		}
+
 		ok := s.scaffoldTemplate(s.initSQLTmpl, workDir, params)
 		if !ok {
 			return false
