@@ -20,6 +20,7 @@ import (
 const (
 	ScaffolderRepo        = "Repository"
 	ScaffolderRepoQuery   = "Repository\t-> Query"
+	ScaffolderRepoScan    = "Repository\t-> Scan"
 	ScaffolderRepoSave    = "Repository\t-> Save"
 	ScaffolderRouter      = "Router"
 	ScaffolderRouterRoute = "Router\t-> Route"
@@ -277,6 +278,8 @@ func (s *Scaffold) Run(ctx context.Context, pkg string) bool {
 		return s.scaffoldRepositorySave(pkg)
 	case ScaffolderRepoQuery:
 		return s.scaffoldRepositoryQuery(pkg)
+	case ScaffolderRepoScan:
+		return s.scaffoldRepositoryScan(pkg)
 	case ScaffolderRouter:
 		return s.scaffoldRouter(pkg)
 	case ScaffolderRouterRoute:
@@ -298,7 +301,7 @@ func (s *Scaffold) promptForScaffolder(pkg string) (string, bool) {
 	if sourcecode.ProjectHasSQL(".") {
 		_, err := os.Stat(repoFilePath)
 		if err == nil {
-			opts = append(opts, ScaffolderRepoQuery, ScaffolderRepoSave)
+			opts = append(opts, ScaffolderRepoQuery, ScaffolderRepoScan, ScaffolderRepoSave)
 		} else if sourcecode.ProjectHasSQL(".") {
 			opts = append(opts, ScaffolderRepo)
 		}
@@ -496,6 +499,45 @@ func (ro *Router) {{.handlerMethod}}(w http.ResponseWriter, r *http.Request) {
 	s.term.TaskSucceeded()
 
 	return true
+}
+
+func (s *Scaffold) scaffoldRepositoryScan(pkg string) bool {
+	model, ok := s.promptForModel(pkg)
+	if !ok {
+		return false
+	}
+
+	t := template.Must(template.New("Repo#ScaffoldScan").Parse(`
+func (r *Repo) {{.method}}(ctx context.Context) ({{.returnType}}, error) {
+	var {{.modelVar}} {{.modelVarType}}
+
+	err := csql.GetConn(ctx, r.db).
+		Find(&{{.modelVar}}).
+		Error
+	if err != nil {
+	    return nil, cerrors.New(err, "failed to scan {{.modelVar}}", nil)
+    }
+
+	return {{.returnVar}}, nil
+}
+`))
+
+	s.term.InProgressTask("Update repo.go")
+	err := sourcecode.AppendTemplateToFile(t, map[string]interface{}{
+		"method":       "List" + strcase.ToCamel(inflection.Plural(model.Name)),
+		"model":        model.Name,
+		"modelVar":     strcase.ToLowerCamel(inflection.Plural(model.Name)),
+		"modelVarType": "[]" + model.Name,
+		"returnType":   "[]" + model.Name,
+		"returnVar":    strcase.ToLowerCamel(inflection.Plural(model.Name)),
+	}, path.Join("pkg", pkg, "repo.go"))
+	if err != nil {
+		s.term.TaskFailed(cerrors.New(err, "Failed to update repo.go", nil))
+		return false
+	}
+	s.term.TaskSucceeded()
+
+	return false
 }
 
 func (s *Scaffold) scaffoldRepositoryQuery(pkg string) bool {
