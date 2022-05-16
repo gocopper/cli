@@ -204,7 +204,7 @@ dsn="./{{.project}}.db"
 		}
 
 		err = sourcecode.AddImports(path.Join(workDir, "cmd", "app", "wire.go"), []string{
-			"github.com/gocopper/pkg/csql",
+			"github.com/gocopper/copper/csql",
 		})
 		if err != nil {
 			s.term.Error(cerrors.New(err, "Failed to add csql deps to pkg/app/wire.go", nil))
