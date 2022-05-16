@@ -4,14 +4,13 @@ import (
 	"net/http"
 
 	"github.com/gocopper/copper/chttp"
-	"github.com/gocopper/copper/chtml"
 	"github.com/gocopper/copper/clogger"
 )
 
 type NewHTTPHandlerParams struct {
 	RequestLoggerMW *chttp.RequestLoggerMiddleware
 
-	HTML *chtml.Router
+	HTML *chttp.HTMLRouter
 
 	Logger clogger.Logger
 }

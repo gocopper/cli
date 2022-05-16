@@ -3,7 +3,6 @@ package web
 import (
 	"embed"
 
-	"github.com/gocopper/copper/chtml"
 	"github.com/google/wire"
 
 	"{{.module}}/web/build"
@@ -14,7 +13,7 @@ import (
 var HTMLDir embed.FS
 
 var WireModule = wire.NewSet(
-	wire.InterfaceValue(new(chtml.HTMLDir), HTMLDir),
-	wire.InterfaceValue(new(chtml.StaticDir), build.StaticDir),
+	wire.InterfaceValue(new(chttp.HTMLDir), HTMLDir),
+	wire.InterfaceValue(new(chttp.StaticDir), build.StaticDir),
 )
 
