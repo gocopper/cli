@@ -168,7 +168,6 @@ func (s *Scaffold) Init() bool {
 		}
 
 		err = sourcecode.AddImports(path.Join(workDir, "cmd", "app", "wire.go"), []string{
-			"github.com/gocopper/copper/chtml",
 			path.Join(module, "web"),
 		})
 		if err != nil {
@@ -177,7 +176,6 @@ func (s *Scaffold) Init() bool {
 		}
 
 		err = sourcecode.InsertWireModuleItem(path.Join(workDir, "cmd", "app"), `
-chtml.WireModule,
 web.WireModule,
 app.NewRouter,
 wire.Struct(new(app.NewRouterParams), "*"),
