@@ -8,7 +8,7 @@ import (
 	"github.com/google/subcommands"
 )
 
-const version = "0.6.0"
+const version = "0.6.1"
 
 func NewCmdVersion() *CmdVersion {
 	return &CmdVersion{}

@@ -169,6 +169,7 @@ func (s *Scaffold) Init() bool {
 
 		err = sourcecode.AddImports(path.Join(workDir, "cmd", "app", "wire.go"), []string{
 			path.Join(module, "web"),
+			path.Join(module, "web/build"),
 		})
 		if err != nil {
 			s.term.Error(cerrors.New(err, "Failed to add deps to pkg/app/wire.go", nil))
@@ -176,9 +177,12 @@ func (s *Scaffold) Init() bool {
 		}
 
 		err = sourcecode.InsertWireModuleItem(path.Join(workDir, "cmd", "app"), `
-web.WireModule,
 app.NewRouter,
 wire.Struct(new(app.NewRouterParams), "*"),
+
+wire.InterfaceValue(new(chttp.HTMLDir), web.HTMLDir),
+wire.InterfaceValue(new(chttp.StaticDir), build.StaticDir),
+web.HTMLRenderFuncs,
 `)
 		if err != nil {
 			s.term.Error(cerrors.New(err, "Failed to add web module to app", nil))
