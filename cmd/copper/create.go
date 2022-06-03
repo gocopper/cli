@@ -126,8 +126,8 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 	c.term.TaskSucceeded()
 
-	c.term.Section("Run Go Server")
-	c.term.Box(fmt.Sprintf(`$ cd %s && copper watch`, wd))
+	c.term.Section("Run App Server")
+	c.term.Box(fmt.Sprintf(`$ cd %s && copper run -watch`, wd))
 
 	if c.frontend == "go:tailwind" {
 		c.term.Section("Run Tailwind Server")
