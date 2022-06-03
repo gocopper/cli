@@ -3,51 +3,66 @@ package main
 import (
 	"context"
 	"flag"
-	"os"
 
-	"github.com/gocopper/cli"
+	"github.com/gocopper/cli/v3/pkg/mk"
+	"github.com/gocopper/cli/v3/pkg/term"
 	"github.com/google/subcommands"
 )
 
-func NewCmdBuild() *CmdBuild {
-	return &CmdBuild{
-		make: cli.NewMake(),
+func NewBuildCmd(term *term.Terminal) *BuildCmd {
+	return &BuildCmd{
+		term: term,
 	}
 }
 
-type CmdBuild struct {
-	make *cli.Make
+type BuildCmd struct {
+	term *term.Terminal
+
+	migrate bool
 }
 
-func (c *CmdBuild) Name() string {
+func (c *BuildCmd) Name() string {
 	return "build"
 }
 
-func (c *CmdBuild) Synopsis() string {
-	return "build project binaries ready for deployment"
+func (c *BuildCmd) Synopsis() string {
+	return "Builds the copper project"
 }
 
-func (c *CmdBuild) Usage() string {
-	return "copper build"
+func (c *BuildCmd) Usage() string {
+	if mk.ProjectHasMigrate(".") {
+		return `copper build [-migrate]
+`
+	}
+
+	return `copper build
+`
 }
 
-func (c *CmdBuild) SetFlags(set *flag.FlagSet) {}
+func (c *BuildCmd) SetFlags(f *flag.FlagSet) {
+	if mk.ProjectHasMigrate(".") {
+		f.BoolVar(&c.migrate, "migrate", true, "Build the migrate binary")
+	}
+}
 
-func (c *CmdBuild) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
-	projectPath, err := os.Getwd()
+func (c *BuildCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+	c.term.InProgressTask("Build Project")
+
+	err := mk.NewBuilder(".", c.migrate).Build(ctx)
 	if err != nil {
-		return 1
+		c.term.TaskFailed(err)
+		return subcommands.ExitFailure
 	}
 
-	ok := c.make.Build(ctx, cli.BuildParams{
-		ProjectPath: projectPath,
-		Migrate:     true,
-		JS:          true,
-		App:         true,
-	})
-	if !ok {
-		return 1
+	c.term.TaskSucceeded()
+
+	if c.migrate {
+		c.term.Section("Run Database Migrations")
+		c.term.Box("./build/migrate.out")
 	}
 
-	return 0
+	c.term.Section("Run App")
+	c.term.Box("./build/app.out")
+
+	return subcommands.ExitSuccess
 }

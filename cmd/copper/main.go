@@ -3,30 +3,30 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"os"
 
+	"github.com/gocopper/cli/v3/pkg/term"
 	"github.com/google/subcommands"
 )
 
 func main() {
-	subcommands.Register(NewCmdInit(), "")
-	subcommands.Register(NewCmdBuild(), "")
-	subcommands.Register(NewCmdMigrate(), "")
-	subcommands.Register(NewCmdRun(), "")
-	subcommands.Register(NewCmdWatch(), "")
-	subcommands.Register(NewCmdScaffold(), "")
-	subcommands.Register(NewCmdVersion(), "")
+	var (
+		ctx      = context.Background()
+		terminal = term.NewTerminal()
+	)
+
+	subcommands.Register(NewCreateCmd(terminal), "")
+	subcommands.Register(NewBuildCmd(terminal), "")
+	subcommands.Register(NewRunCmd(terminal), "")
+	subcommands.Register(subcommands.HelpCommand(), "")
+
+	subcommands.Register(NewScaffoldPkgCmd(terminal), "scaffold")
+	subcommands.Register(NewScaffoldRepoCmd(terminal), "scaffold")
+	subcommands.Register(NewScaffoldSQLCmd(terminal), "scaffold")
+	subcommands.Register(NewScaffoldRouterCmd(terminal), "scaffold")
+	subcommands.Register(NewScaffoldRouteCmd(terminal), "scaffold")
 
 	flag.Parse()
 
-	log.SetFlags(0)
-	log.SetOutput(os.Stderr)
-
-	var (
-		ctx      = context.Background()
-		exitCode = subcommands.Execute(ctx)
-	)
-
-	os.Exit(int(exitCode))
+	os.Exit(int(subcommands.Execute(ctx)))
 }

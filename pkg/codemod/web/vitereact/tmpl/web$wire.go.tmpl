@@ -1,0 +1,18 @@
+package web
+
+import (
+	"embed"
+
+	"github.com/gocopper/copper/chttp"
+	"github.com/gocopper/pkg/vitejs"
+)
+
+//nolint:stylecheck,golint
+//go:embed src
+var HTMLDir embed.FS
+
+func HTMLRenderFuncs(vite *vitejs.Assets) []chttp.HTMLRenderFunc {
+	return []chttp.HTMLRenderFunc{
+		vite.HTMLRenderFunc(),
+	}
+}
