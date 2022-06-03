@@ -5,6 +5,7 @@ import (
 	"flag"
 
 	"github.com/gocopper/cli/v3/pkg/codemod/web/router"
+	"github.com/gocopper/cli/v3/pkg/mk"
 	"github.com/gocopper/cli/v3/pkg/term"
 	"github.com/google/subcommands"
 )
@@ -47,6 +48,8 @@ func (c *ScaffoldRouterCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 		c.term.TaskFailed(err)
 		return subcommands.ExitFailure
 	}
+
+	_ = mk.GoLangCILint(ctx, ".")
 
 	c.term.TaskSucceeded()
 

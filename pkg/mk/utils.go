@@ -14,6 +14,19 @@ func ProjectHasMigrate(projectPath string) bool {
 	return err == nil
 }
 
+func GoLangCILint(ctx context.Context, workingDir string) error {
+	cmd := exec.CommandContext(ctx, "golangci-lint", "run")
+
+	cmd.Dir = workingDir
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return errors.New(string(output))
+	}
+
+	return nil
+}
+
 func projectHasWeb(projectPath string) bool {
 	_, err := os.Stat(path.Join(projectPath, "web", "src"))
 

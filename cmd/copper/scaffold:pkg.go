@@ -6,6 +6,7 @@ import (
 
 	"github.com/gocopper/cli/v3/pkg/codemod"
 	"github.com/gocopper/cli/v3/pkg/codemod/base/pkg"
+	"github.com/gocopper/cli/v3/pkg/mk"
 	"github.com/gocopper/cli/v3/pkg/term"
 	"github.com/google/subcommands"
 )
@@ -54,6 +55,8 @@ func (c *ScaffoldPkgCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 		c.term.TaskFailed(err)
 		return subcommands.ExitFailure
 	}
+
+	_ = mk.GoLangCILint(ctx, ".")
 
 	c.term.TaskSucceeded()
 

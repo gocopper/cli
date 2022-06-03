@@ -14,6 +14,7 @@ import (
 	"github.com/gocopper/cli/v3/pkg/codemod/web/tailwindpostcss"
 	"github.com/gocopper/cli/v3/pkg/codemod/web/vitereact"
 	"github.com/gocopper/cli/v3/pkg/codemod/web/webgo"
+	"github.com/gocopper/cli/v3/pkg/mk"
 	"github.com/gocopper/cli/v3/pkg/term"
 	"github.com/gocopper/copper/cerrors"
 	"github.com/google/subcommands"
@@ -123,6 +124,8 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			return subcommands.ExitUsageError
 		}
 	}
+
+	_ = mk.GoLangCILint(ctx, ".")
 
 	c.term.TaskSucceeded()
 

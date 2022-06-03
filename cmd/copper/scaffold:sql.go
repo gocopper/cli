@@ -5,6 +5,7 @@ import (
 	"flag"
 
 	"github.com/gocopper/cli/v3/pkg/codemod/storage/sql"
+	"github.com/gocopper/cli/v3/pkg/mk"
 	"github.com/gocopper/cli/v3/pkg/term"
 	"github.com/google/subcommands"
 )
@@ -60,6 +61,8 @@ func (c *ScaffoldSQLCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 			return subcommands.ExitFailure
 		}
 
+		_ = mk.GoLangCILint(ctx, ".")
+
 		c.term.TaskSucceeded()
 	case "query":
 		c.term.InProgressTask("Scaffold SQL")
@@ -69,6 +72,8 @@ func (c *ScaffoldSQLCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...inte
 			c.term.TaskFailed(err)
 			return subcommands.ExitFailure
 		}
+
+		_ = mk.GoLangCILint(ctx, ".")
 
 		c.term.TaskSucceeded()
 	default:
