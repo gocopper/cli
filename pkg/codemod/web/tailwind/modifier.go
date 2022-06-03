@@ -42,7 +42,8 @@ func (cm *CodeMod) Apply(ctx context.Context) error {
 	}
 
 	err = codemod.AddJSONSection(path.Join(cm.WorkingDir, "web", "package.json"), "scripts", map[string]string{
-		"dev": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --watch",
+		"build": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --minify",
+		"dev":   "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --watch",
 	})
 	if err != nil {
 		return cerrors.New(err, "failed to add npm scripts", map[string]interface{}{
