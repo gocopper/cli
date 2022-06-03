@@ -57,7 +57,7 @@ func (c *ScaffoldRouteCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...in
 		return subcommands.ExitFailure
 	}
 
-	_ = mk.GoLangCILint(ctx, ".")
+	_ = mk.GoFmt(ctx, ".")
 
 	c.term.TaskSucceeded()
 

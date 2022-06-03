@@ -125,7 +125,7 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		}
 	}
 
-	_ = mk.GoLangCILint(ctx, ".")
+	_ = mk.GoFmt(ctx, ".")
 
 	c.term.TaskSucceeded()
 

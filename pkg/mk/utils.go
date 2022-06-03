@@ -14,8 +14,8 @@ func ProjectHasMigrate(projectPath string) bool {
 	return err == nil
 }
 
-func GoLangCILint(ctx context.Context, workingDir string) error {
-	cmd := exec.CommandContext(ctx, "golangci-lint", "run")
+func GoFmt(ctx context.Context, workingDir string) error {
+	cmd := exec.CommandContext(ctx, "gofmt", "-w", ".")
 
 	cmd.Dir = workingDir
 
