@@ -28,13 +28,16 @@ func AddImports(path string, deps []string) error {
 		return cerrors.New(err, "failed to find existing 'import' statement in file", nil)
 	}
 
+	depsWithQuotes := make([]string, 0, len(deps))
 	for i := range deps {
-		if strings.Contains(string(data), deps[i]) {
+		d := "\"" + deps[i] + "\""
+
+		if strings.Contains(string(data), d) {
 			continue
 		}
 
-		deps[i] = "\"" + deps[i] + "\""
+		depsWithQuotes = append(depsWithQuotes, d)
 	}
 
-	return InsertTextToFile(path, strings.Join(deps, "\n")+"\n", pos+len(importStmt)+1)
+	return InsertTextToFile(path, strings.Join(depsWithQuotes, "\n")+"\n", pos+len(importStmt)+1)
 }
