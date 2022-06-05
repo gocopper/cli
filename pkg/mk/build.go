@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/gocopper/cli/v3/pkg/codemod"
+	"github.com/gocopper/cli/pkg/codemod"
 	"github.com/gocopper/copper/cerrors"
 	"github.com/otiai10/copy"
 )

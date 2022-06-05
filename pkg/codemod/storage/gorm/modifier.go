@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"path"
 
-	codemod2 "github.com/gocopper/cli/v3/pkg/codemod"
+	codemod2 "github.com/gocopper/cli/pkg/codemod"
 	"github.com/gocopper/copper/cerrors"
 )
 

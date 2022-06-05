@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/gocopper/cli/v3/pkg/mk"
-	"github.com/gocopper/cli/v3/pkg/term"
+	"github.com/gocopper/cli/pkg/mk"
+	"github.com/gocopper/cli/pkg/term"
 	"github.com/google/subcommands"
 	"github.com/radovskyb/watcher"
 )

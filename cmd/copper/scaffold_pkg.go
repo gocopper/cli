@@ -4,10 +4,10 @@ import (
 	"context"
 	"flag"
 
-	"github.com/gocopper/cli/v3/pkg/codemod"
-	"github.com/gocopper/cli/v3/pkg/codemod/base/pkg"
-	"github.com/gocopper/cli/v3/pkg/mk"
-	"github.com/gocopper/cli/v3/pkg/term"
+	"github.com/gocopper/cli/pkg/codemod"
+	"github.com/gocopper/cli/pkg/codemod/base/pkg"
+	"github.com/gocopper/cli/pkg/mk"
+	"github.com/gocopper/cli/pkg/term"
 	"github.com/google/subcommands"
 )
 

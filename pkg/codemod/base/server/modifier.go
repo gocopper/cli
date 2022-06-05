@@ -4,7 +4,7 @@ import (
 	"context"
 	"embed"
 
-	"github.com/gocopper/cli/v3/pkg/codemod"
+	"github.com/gocopper/cli/pkg/codemod"
 	"github.com/gocopper/copper/cerrors"
 )
 
