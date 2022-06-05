@@ -1,4 +1,4 @@
-module github.com/gocopper/cli/v3
+module github.com/gocopper/cli
 
 go 1.17
 
