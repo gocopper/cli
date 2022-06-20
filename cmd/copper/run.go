@@ -93,7 +93,6 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 		case <-w.Event:
 			if didSkipFirstCodeChange {
 				c.term.Text("\n------------------------------------------------------------------------")
-				didSkipFirstCodeChange = true
 			}
 			didSkipFirstCodeChange = true
 
