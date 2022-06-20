@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"os"
 	"path"
 	"regexp"
 	"time"
@@ -69,6 +70,14 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 	}
 
 	w.AddFilterHook(watcher.RegexFilterHook(regexp.MustCompile(".*.go$"), false))
+
+	if _, err := os.Stat(path.Join(".", "web/wire.go")); err == nil {
+		err = w.Add(path.Join(".", "web/wire.go"))
+		if err != nil {
+			c.term.Error("Failed to watch web/wire.go", err)
+			return subcommands.ExitFailure
+		}
+	}
 
 	go func() {
 		err := w.Start(time.Millisecond * 500)
