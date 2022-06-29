@@ -10,6 +10,7 @@ import (
 
 	"github.com/gocopper/cli/pkg/codemod/base/server"
 	"github.com/gocopper/cli/pkg/codemod/storage/gorm"
+	"github.com/gocopper/cli/pkg/codemod/web/frontendnone"
 	"github.com/gocopper/cli/pkg/codemod/web/tailwind"
 	"github.com/gocopper/cli/pkg/codemod/web/tailwindpostcss"
 	"github.com/gocopper/cli/pkg/codemod/web/vitereact"
@@ -76,39 +77,45 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			c.term.TaskFailed(cerrors.New(err, "failed to apply web code mod", nil))
 			return subcommands.ExitFailure
 		}
+	}
 
-		switch c.frontend {
-		case "go":
-			// note: already applied the web code mod
-			break
-		case "go:tailwind":
-			err = tailwind.NewCodeMod(wd, module).Apply(ctx)
-			if err != nil {
-				c.term.TaskFailed(cerrors.New(err, "failed to apply go:tailwind code mod", nil))
-				return subcommands.ExitFailure
-			}
-		case "vite:react":
-			err = vitereact.NewCodeMod(wd, module).Apply(ctx)
-			if err != nil {
-				c.term.TaskFailed(cerrors.New(err, "failed to apply vite:react code mod", nil))
-				return subcommands.ExitFailure
-			}
-		case "vite:react:tailwind":
-			err = vitereact.NewCodeMod(wd, module).Apply(ctx)
-			if err != nil {
-				c.term.TaskFailed(cerrors.New(err, "failed to apply vite:react code mod", nil))
-				return subcommands.ExitFailure
-			}
-
-			err = tailwindpostcss.NewCodeMod(wd, module).Apply(ctx)
-			if err != nil {
-				c.term.TaskFailed(cerrors.New(err, "failed to apply tailwind (postcss) code mod", nil))
-				return subcommands.ExitFailure
-			}
-		default:
-			c.term.TaskFailed(errors.New("unknown frontend stack"))
-			return subcommands.ExitUsageError
+	switch c.frontend {
+	case "none":
+		err = frontendnone.NewCodeMod(wd).Apply(ctx)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply frontend none code mod", nil))
+			return subcommands.ExitFailure
 		}
+	case "go":
+		// note: already applied the web code mod
+		break
+	case "go:tailwind":
+		err = tailwind.NewCodeMod(wd, module).Apply(ctx)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply go:tailwind code mod", nil))
+			return subcommands.ExitFailure
+		}
+	case "vite:react":
+		err = vitereact.NewCodeMod(wd, module).Apply(ctx)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply vite:react code mod", nil))
+			return subcommands.ExitFailure
+		}
+	case "vite:react:tailwind":
+		err = vitereact.NewCodeMod(wd, module).Apply(ctx)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply vite:react code mod", nil))
+			return subcommands.ExitFailure
+		}
+
+		err = tailwindpostcss.NewCodeMod(wd, module).Apply(ctx)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply tailwind (postcss) code mod", nil))
+			return subcommands.ExitFailure
+		}
+	default:
+		c.term.TaskFailed(errors.New("unknown frontend stack"))
+		return subcommands.ExitUsageError
 	}
 
 	if c.storage != "none" {
