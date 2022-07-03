@@ -31,10 +31,27 @@ func (cm *CodeMod) Name() string {
 }
 
 func (cm *CodeMod) Apply(ctx context.Context) error {
+	_, err := codemod.CreateTemplateFiles(templatesFS, cm.WorkingDir, map[string]string{
+		"PackageJSONName": path.Base(cm.Module),
+	}, true)
+	if err != nil {
+		return cerrors.New(err, "failed to create template dir", map[string]interface{}{
+			"wd":     cm.WorkingDir,
+			"module": cm.Module,
+		})
+	}
+
+	err = os.Rename(path.Join(cm.WorkingDir, "web", "public", "styles.css"), path.Join(cm.WorkingDir, "web", "src", "styles.css"))
+	if err != nil {
+		return cerrors.New(err, "failed to move styles.css", map[string]interface{}{
+			"wd": cm.WorkingDir,
+		})
+	}
+
 	installReactCmd := exec.CommandContext(ctx, "npm", "install", "react", "react-dom")
 	installReactCmd.Dir = path.Join(cm.WorkingDir, "web")
 
-	err := installReactCmd.Run()
+	err = installReactCmd.Run()
 	if err != nil {
 		return cerrors.New(err, "failed to npm install react, react-dom", map[string]interface{}{
 			"wd": cm.WorkingDir,
@@ -88,20 +105,6 @@ dev_mode=true
 `)
 	if err != nil {
 		return cerrors.New(err, "failed add vitejs config to dev.toml", map[string]interface{}{
-			"wd": cm.WorkingDir,
-		})
-	}
-
-	_, err = codemod.CreateTemplateFiles(templatesFS, cm.WorkingDir, nil, true)
-	if err != nil {
-		return cerrors.New(err, "failed to create template dir", map[string]interface{}{
-			"wd": cm.WorkingDir,
-		})
-	}
-
-	err = os.Rename(path.Join(cm.WorkingDir, "web", "public", "styles.css"), path.Join(cm.WorkingDir, "web", "src", "styles.css"))
-	if err != nil {
-		return cerrors.New(err, "failed to move styles.css", map[string]interface{}{
 			"wd": cm.WorkingDir,
 		})
 	}

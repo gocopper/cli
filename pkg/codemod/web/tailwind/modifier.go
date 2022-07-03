@@ -31,10 +31,27 @@ func (cm *CodeMod) Name() string {
 }
 
 func (cm *CodeMod) Apply(ctx context.Context) error {
+	_, err := codemod.CreateTemplateFiles(templatesFS, cm.WorkingDir, map[string]string{
+		"PackageJSONName": path.Base(cm.Module),
+	}, true)
+	if err != nil {
+		return cerrors.New(err, "failed to create template dir", map[string]interface{}{
+			"wd":     cm.WorkingDir,
+			"module": cm.Module,
+		})
+	}
+
+	err = os.Remove(path.Join(cm.WorkingDir, "web", "public", "styles.css"))
+	if err != nil {
+		return cerrors.New(err, "failed to remove web/public/styles.css", map[string]interface{}{
+			"wd": cm.WorkingDir,
+		})
+	}
+
 	npmInstallCmd := exec.CommandContext(ctx, "npm", "install", "-D", "tailwindcss")
 	npmInstallCmd.Dir = path.Join(cm.WorkingDir, "web")
 
-	err := npmInstallCmd.Run()
+	err = npmInstallCmd.Run()
 	if err != nil {
 		return cerrors.New(err, "failed to npm install tailwindcss", map[string]interface{}{
 			"wd": cm.WorkingDir,
@@ -47,20 +64,6 @@ func (cm *CodeMod) Apply(ctx context.Context) error {
 	})
 	if err != nil {
 		return cerrors.New(err, "failed to add npm scripts", map[string]interface{}{
-			"wd": cm.WorkingDir,
-		})
-	}
-
-	_, err = codemod.CreateTemplateFiles(templatesFS, cm.WorkingDir, nil, true)
-	if err != nil {
-		return cerrors.New(err, "failed to create template dir", map[string]interface{}{
-			"wd": cm.WorkingDir,
-		})
-	}
-
-	err = os.Remove(path.Join(cm.WorkingDir, "web", "public", "styles.css"))
-	if err != nil {
-		return cerrors.New(err, "failed to remove web/public/styles.css", map[string]interface{}{
 			"wd": cm.WorkingDir,
 		})
 	}
