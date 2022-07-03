@@ -51,7 +51,7 @@ func (b *Builder) Build(ctx context.Context) error {
 
 	err = wireGen(ctx, b.WorkingDir, path.Join(module, "cmd", "app"))
 	if err != nil {
-		return cerrors.New(err, "failed to run wire cmd/app", nil)
+		return cerrors.New(err, "failed to wire dependencies for cmd/app", nil)
 	}
 
 	err = goBuild(ctx, b.WorkingDir, path.Join(module, "cmd", "app"))
@@ -62,7 +62,7 @@ func (b *Builder) Build(ctx context.Context) error {
 	if b.Migrate {
 		err := wireGen(ctx, b.WorkingDir, path.Join(module, "cmd", "migrate"))
 		if err != nil {
-			return cerrors.New(err, "failed to run wire cmd/migrate", nil)
+			return cerrors.New(err, "failed to run wire dependencies for cmd/migrate", nil)
 		}
 
 		err = goBuild(ctx, b.WorkingDir, path.Join(module, "cmd", "migrate"))

@@ -6,6 +6,10 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
+
+	"github.com/gocopper/copper/cerrors"
+	"github.com/gocopper/wire/pkg/wire"
 )
 
 func ProjectHasMigrate(projectPath string) bool {
@@ -47,13 +51,29 @@ func goModTidy(ctx context.Context, workingDir string) error {
 }
 
 func wireGen(ctx context.Context, workingDir, main string) error {
-	cmd := exec.CommandContext(ctx, "wire", "gen", main)
+	outs, errs := wire.Generate(ctx,
+		workingDir,
+		os.Environ(),
+		[]string{main},
+		&wire.GenerateOptions{},
+	)
+	if len(errs) > 0 {
+		return multiErrors(errs)
+	} else if len(outs) == 0 {
+		return errors.New("wire_gen.go was not generated")
+	}
 
-	cmd.Dir = workingDir
+	for i := range outs {
+		if len(outs[i].Errs) > 0 {
+			return multiErrors(outs[i].Errs)
+		}
 
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return errors.New(string(output))
+		err := outs[i].Commit()
+		if err != nil {
+			return cerrors.New(err, "failed to write wire_gen.go", map[string]interface{}{
+				"outputPath": outs[i].OutputPath,
+			})
+		}
 	}
 
 	return nil
@@ -75,4 +95,13 @@ func goBuild(ctx context.Context, workDir, main string) error {
 	}
 
 	return nil
+}
+
+func multiErrors(errs []error) error {
+	errMessages := make([]string, len(errs))
+	for i := range errs {
+		errMessages[i] = errs[i].Error()
+	}
+
+	return errors.New(strings.Join(errMessages, "\n\t"))
 }
