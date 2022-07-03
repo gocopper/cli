@@ -2,10 +2,12 @@ module github.com/gocopper/cli
 
 go 1.17
 
+replace github.com/google/wire => github.com/gocopper/wire v0.5.1-0.20220703161153-a86b170758ef
+
 require (
 	github.com/gocopper/copper v0.6.1
-	github.com/gocopper/wire v0.5.1-0.20220703163131-c1dcca893155
 	github.com/google/subcommands v1.2.0
+	github.com/google/wire v0.5.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jinzhu/inflection v1.0.0
 	github.com/otiai10/copy v1.7.0

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/gocopper/copper/cerrors"
-	"github.com/gocopper/wire/pkg/wire"
+	"github.com/google/wire/pkg/wire"
 )
 
 func ProjectHasMigrate(projectPath string) bool {
