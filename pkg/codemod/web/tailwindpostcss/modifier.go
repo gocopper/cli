@@ -2,15 +2,11 @@ package tailwindpostcss
 
 import (
 	"context"
-	"embed"
 	"os/exec"
 	"path"
 
 	"github.com/gocopper/copper/cerrors"
 )
-
-//go:embed tmpl/*
-var templatesFS embed.FS
 
 func NewCodeMod(wd, module string) *CodeMod {
 	return &CodeMod{
@@ -29,6 +25,8 @@ func (cm *CodeMod) Name() string {
 }
 
 func (cm *CodeMod) Apply(ctx context.Context) error {
+	// Assumes package.json is already created
+
 	npmInstallCmd := exec.CommandContext(ctx, "npm", "install", "-D", "tailwindcss", "postcss", "autoprefixer")
 	npmInstallCmd.Dir = path.Join(cm.WorkingDir, "web")
 

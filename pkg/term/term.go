@@ -89,7 +89,7 @@ func (t *Terminal) TaskSucceeded() {
 
 		if task.Type == TerminalLineTypeTask && !task.Completed {
 			task.Completed = true
-			task.Duration = time.Now().Sub(task.Start).Round(time.Millisecond)
+			task.Duration = time.Since(task.Start).Round(time.Millisecond)
 
 			task.spinner.Success(fmt.Sprintf("%s (Took %s)", task.Description, task.Duration.String()))
 		}
@@ -102,7 +102,7 @@ func (t *Terminal) TaskFailed(err error) {
 
 		if task.Type == TerminalLineTypeTask && !task.Completed {
 			task.Completed = true
-			task.Duration = time.Now().Sub(task.Start).Round(time.Millisecond)
+			task.Duration = time.Since(task.Start).Round(time.Millisecond)
 
 			task.spinner.FailPrinter = pterm.Error.WithShowLineNumber(false)
 			task.spinner.Fail(fmt.Sprintf("%s (Took %s)", task.Description, task.Duration.String()))

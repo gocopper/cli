@@ -41,9 +41,7 @@ func insertHTMLRouterToAppHandler(path string) error {
 
 		offset := int(structType.Fields.Opening)
 
-		paramText := fmt.Sprintf("\nHTML *chttp.HTMLRouter")
-
-		err = codemod.InsertTextToFile(path, paramText, offset)
+		err = codemod.InsertTextToFile(path, "\nHTML *chttp.HTMLRouter", offset)
 		if err != nil {
 			return cerrors.New(err, "failed to add router param to NewHandlerParams", nil)
 		}
@@ -102,9 +100,7 @@ func insertHTMLRouterToAppHandler(path string) error {
 
 				offset := int(valCompositeLit.Lbrace)
 
-				routerText := fmt.Sprintf("\np.HTML,\n")
-
-				err = codemod.InsertTextToFile(path, routerText, offset)
+				err = codemod.InsertTextToFile(path, "\np.HTML,\n", offset)
 				if err != nil {
 					return cerrors.New(err, "failed to add router to []chttp.Router", nil)
 				}
