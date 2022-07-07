@@ -44,6 +44,8 @@ chttp.WireModuleEmptyHTML,`)
 	ro.rw.WriteJSON(w, chttp.WriteJSONParams{
 		Data: map[string]string{
 			"message": "Hello, Copper!",
+			"demo": "https://vimeo.com/723537998",
+			"frontend_stack": "none",
 		},
 	})`,
 	})
