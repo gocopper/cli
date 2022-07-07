@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"syscall"
 
 	"github.com/chromedp/chromedp"
 	"github.com/gocopper/copper/cerrors"
@@ -23,6 +24,7 @@ func runCmd(wd, name string, args ...string) error {
 func startCmd(wd, name string, args ...string) (*exec.Cmd, error) {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = wd
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	err := cmd.Start()
 	if err != nil {
@@ -30,6 +32,16 @@ func startCmd(wd, name string, args ...string) (*exec.Cmd, error) {
 	}
 
 	return cmd, nil
+}
+
+func killCmd(cmd *exec.Cmd) error {
+	pgID, err := syscall.Getpgid(cmd.Process.Pid)
+	if err != nil {
+		return cerrors.New(err, "failed to get pgid", map[string]interface{}{
+			"pid": cmd.Process.Pid,
+		})
+	}
+	return syscall.Kill(-pgID, syscall.SIGKILL)
 }
 
 func setCHTTPPort(projectDir string, port int) error {

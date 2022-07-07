@@ -77,7 +77,7 @@ func runTask(s *ScreenGrabber) error {
 			"dir": projectDir,
 		})
 	}
-	defer func() { _ = cmd.Process.Kill() }()
+	defer func() { _ = killCmd(cmd) }()
 
 	if s.Stack.RunNPM {
 		npmCmd, err := startCmd(path.Join(projectDir, "web"), "npm", "run", "dev")
@@ -86,7 +86,7 @@ func runTask(s *ScreenGrabber) error {
 				"dir": projectDir,
 			})
 		}
-		defer func() { _ = npmCmd.Process.Kill() }()
+		defer func() { _ = killCmd(npmCmd) }()
 	}
 
 	time.Sleep(15 * time.Second)
