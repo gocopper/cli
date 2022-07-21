@@ -31,6 +31,9 @@ func AddImports(path string, deps []string) error {
 	depsWithQuotes := make([]string, 0, len(deps))
 	for i := range deps {
 		d := "\"" + deps[i] + "\""
+		if strings.HasPrefix(deps[i], "_") {
+			d = deps[i]
+		}
 
 		if strings.Contains(string(data), d) {
 			continue

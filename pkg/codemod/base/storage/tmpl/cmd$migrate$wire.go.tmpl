@@ -3,10 +3,9 @@
 package main
 
 import (
-	"{{ .module }}/pkg/app"
-
 	"github.com/gocopper/copper"
 	"github.com/gocopper/copper/csql"
+	"{{ .module }}/migrations"
 	"github.com/google/wire"
 )
 
@@ -20,8 +19,5 @@ var WireModule = wire.NewSet(
 	copper.WireModule,
 	csql.WireModule,
 
-	app.WireModule,
-
-	wire.Struct(new(app.ProvideMigrationsParams), "*"),
-	app.ProvideMigrations,
+	wire.Value(csql.Migrations(migrations.Migrations)),
 )

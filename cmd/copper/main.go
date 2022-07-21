@@ -21,8 +21,7 @@ func main() {
 	subcommands.Register(subcommands.HelpCommand(), "")
 
 	subcommands.Register(NewScaffoldPkgCmd(terminal), "scaffold")
-	subcommands.Register(NewScaffoldRepoCmd(terminal), "scaffold")
-	subcommands.Register(NewScaffoldSQLCmd(terminal), "scaffold")
+	subcommands.Register(NewScaffoldQueriesCmd(terminal), "scaffold")
 	subcommands.Register(NewScaffoldRouterCmd(terminal), "scaffold")
 	subcommands.Register(NewScaffoldRouteCmd(terminal), "scaffold")
 

@@ -116,7 +116,13 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 
 func (c *RunCmd) execute(ctx context.Context) subcommands.ExitStatus {
 	c.term.InProgressTask("Build Project")
-	err := mk.NewBuilder(".", c.migrate).Build(ctx)
+	
+	buildMigrate := mk.BuildMigrateSkip
+	if c.migrate {
+		buildMigrate = mk.BuildMigrateOnlyIfDoesntExist
+	}
+
+	err := mk.NewBuilder(".", buildMigrate).Build(ctx)
 	if err != nil {
 		c.term.TaskFailed(err)
 		return subcommands.ExitFailure
@@ -125,7 +131,7 @@ func (c *RunCmd) execute(ctx context.Context) subcommands.ExitStatus {
 
 	if c.migrate {
 		c.term.Section("Run Database Migrations")
-		err := mk.NewRunner(".", "migrate.out").Run(ctx)
+		err := mk.NewRunner(".", "migrate.out", "-set", "csql.migrations.source=\"dir\"").Run(ctx)
 		if err != nil {
 			c.term.Error("Failed to run database migrations", err)
 			return subcommands.ExitFailure

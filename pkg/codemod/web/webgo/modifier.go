@@ -3,9 +3,10 @@ package webgo
 import (
 	"context"
 	"embed"
+	"fmt"
 	"path"
 
-	codemod2 "github.com/gocopper/cli/pkg/codemod"
+	"github.com/gocopper/cli/pkg/codemod"
 	"github.com/gocopper/copper/cerrors"
 )
 
@@ -29,12 +30,12 @@ func (cm *CodeMod) Name() string {
 }
 
 func (cm *CodeMod) Apply(ctx context.Context) error {
-	_, err := codemod2.CreateTemplateFiles(templatesFS, cm.WorkingDir, nil, true)
+	_, err := codemod.CreateTemplateFiles(templatesFS, cm.WorkingDir, nil, true)
 	if err != nil {
 		return cerrors.New(err, "failed to create template dir", nil)
 	}
 
-	err = codemod2.AddImports(path.Join(cm.WorkingDir, "cmd", "app", "wire.go"), []string{
+	err = codemod.AddImports(path.Join(cm.WorkingDir, "cmd", "app", "wire.go"), []string{
 		path.Join(cm.Module, "web"),
 		path.Join(cm.Module, "web", "build"),
 	})
@@ -42,7 +43,7 @@ func (cm *CodeMod) Apply(ctx context.Context) error {
 		return cerrors.New(err, "failed to add web imports to cmd/app/wire.go", nil)
 	}
 
-	err = codemod2.InsertWireModuleItems(path.Join(cm.WorkingDir, "cmd", "app", "wire.go"), `
+	err = codemod.InsertWireModuleItems(path.Join(cm.WorkingDir, "cmd", "app", "wire.go"), `
 wire.InterfaceValue(new(chttp.HTMLDir), web.HTMLDir),
 wire.InterfaceValue(new(chttp.StaticDir), build.StaticDir),
 web.HTMLRenderFuncs,`)
@@ -50,14 +51,14 @@ web.HTMLRenderFuncs,`)
 		return cerrors.New(err, "failed to add web wire modules to cmd/app/wire.go", nil)
 	}
 
-	err = codemod2.AddImports(path.Join(cm.WorkingDir, "pkg", "app", "router.go"), []string{
+	err = codemod.AddImports(path.Join(cm.WorkingDir, "pkg", "app", "router.go"), []string{
 		"net/http",
 	})
 	if err != nil {
 		return cerrors.New(err, "failed to add net/http import to pkg/app/router.go", nil)
 	}
 
-	err = codemod2.InsertRoute(path.Join(cm.WorkingDir, "pkg", "app", "router.go"), codemod2.InsertRouteParams{
+	err = codemod.InsertRoute(path.Join(cm.WorkingDir, "pkg", "app", "router.go"), codemod.InsertRouteParams{
 		Path:        "/",
 		Method:      "Get",
 		HandlerName: "HandleIndexPage",
@@ -70,7 +71,7 @@ web.HTMLRenderFuncs,`)
 		return cerrors.New(err, "failed to insert route for index page", nil)
 	}
 
-	err = codemod2.AppendTextToFile(path.Join(cm.WorkingDir, "config", "dev.toml"), `
+	err = codemod.AppendTextToFile(path.Join(cm.WorkingDir, "config", "dev.toml"), `
 [chttp]
 use_local_html = true
 render_html_error = true
@@ -79,9 +80,14 @@ render_html_error = true
 		return cerrors.New(err, "failed to add chttp config to dev.toml", nil)
 	}
 
-	err = insertHTMLRouterToAppHandler(path.Join(cm.WorkingDir, "pkg", "app", "handler.go"))
+	err = codemod.InsertLineAfterInFile(path.Join(cm.WorkingDir, "pkg/app/handler.go"), "*Router", "HTML *chttp.HTMLRouter")
 	if err != nil {
-		return cerrors.New(err, "failed to register chttp.HTMLRouter", nil)
+		return cerrors.New(err, "failed to insert *chttp.HTMLRouter", nil)
+	}
+
+	err = codemod.InsertLineAfterInFile(path.Join(cm.WorkingDir, "pkg/app/handler.go"), "p.App,", "p.HTML,")
+	if err != nil {
+		return fmt.Errorf("failed to insert p.HTML; %v", err)
 	}
 
 	return nil

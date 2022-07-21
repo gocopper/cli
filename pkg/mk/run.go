@@ -10,22 +10,24 @@ import (
 	"github.com/gocopper/copper/cerrors"
 )
 
-func NewRunner(wd, binary string) *Runner {
+func NewRunner(wd, binary string, args ...string) *Runner {
 	return &Runner{
 		WorkingDir: wd,
 		Binary:     binary,
+		Args:       args,
 	}
 }
 
 type Runner struct {
 	WorkingDir string
 	Binary     string
+	Args       []string
 }
 
 func (r *Runner) Run(ctx context.Context) error {
 	const SignalKilled = 9
 
-	cmd := exec.CommandContext(ctx, path.Join(r.WorkingDir, "build", r.Binary))
+	cmd := exec.CommandContext(ctx, path.Join(r.WorkingDir, "build", r.Binary), r.Args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

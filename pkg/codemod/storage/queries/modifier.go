@@ -1,4 +1,4 @@
-package repo
+package queries
 
 import (
 	"context"
@@ -25,7 +25,7 @@ type CodeMod struct {
 }
 
 func (cm *CodeMod) Name() string {
-	return "repo"
+	return "queries"
 }
 
 func (cm *CodeMod) Apply(ctx context.Context) error {
@@ -37,8 +37,7 @@ func (cm *CodeMod) Apply(ctx context.Context) error {
 	}
 
 	err = codemod.InsertWireModuleItems(path.Join(cm.WorkingDir, "pkg", cm.Pkg, "wire.go"), `
-	NewRepo,
-	NewMigration,
+	NewQueries,
 `)
 	if err != nil {
 		return cerrors.New(err, "failed to update wire.go", nil)

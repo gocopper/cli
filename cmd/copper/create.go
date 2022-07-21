@@ -9,7 +9,10 @@ import (
 	"strings"
 
 	"github.com/gocopper/cli/pkg/codemod/base/server"
-	"github.com/gocopper/cli/pkg/codemod/storage/gorm"
+	"github.com/gocopper/cli/pkg/codemod/base/storage"
+	"github.com/gocopper/cli/pkg/codemod/storage/mysql"
+	"github.com/gocopper/cli/pkg/codemod/storage/postgres"
+	"github.com/gocopper/cli/pkg/codemod/storage/sqlite3"
 	"github.com/gocopper/cli/pkg/codemod/web/frontendnone"
 	"github.com/gocopper/cli/pkg/codemod/web/tailwind"
 	"github.com/gocopper/cli/pkg/codemod/web/tailwindpostcss"
@@ -49,7 +52,7 @@ func (c *CreateCmd) Usage() string {
 
 func (c *CreateCmd) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&c.frontend, "frontend", "go", "go, go:tailwind, vite:react, vite:react:tailwind, none")
-	f.StringVar(&c.storage, "storage", "gorm:sqlite", "gorm:sqlite, none")
+	f.StringVar(&c.storage, "storage", "sqlite3", "sqlite3, postgres, mysql, none")
 }
 
 func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -119,11 +122,29 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	}
 
 	if c.storage != "none" {
+		err = storage.NewCodeMod(wd, module).Apply(ctx)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply storage code mod", nil))
+			return subcommands.ExitFailure
+		}
+
 		switch c.storage {
-		case "gorm:sqlite":
-			err = gorm.NewCodeMod(wd, module).Apply(ctx)
+		case "sqlite3":
+			err = sqlite3.NewCodeMod(wd, module).Apply(ctx)
 			if err != nil {
-				c.term.TaskFailed(cerrors.New(err, "failed to apply gorm:sqlite code mod", nil))
+				c.term.TaskFailed(cerrors.New(err, "failed to apply sqlite3 code mod", nil))
+				return subcommands.ExitFailure
+			}
+		case "postgres":
+			err = postgres.NewCodeMod(wd, module).Apply(ctx)
+			if err != nil {
+				c.term.TaskFailed(cerrors.New(err, "failed to apply postgres code mod", nil))
+				return subcommands.ExitFailure
+			}
+		case "mysql":
+			err = mysql.NewCodeMod(wd, module).Apply(ctx)
+			if err != nil {
+				c.term.TaskFailed(cerrors.New(err, "failed to apply mysql code mod", nil))
 				return subcommands.ExitFailure
 			}
 		default:
