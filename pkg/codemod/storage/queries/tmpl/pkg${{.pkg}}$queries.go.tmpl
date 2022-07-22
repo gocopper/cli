@@ -24,27 +24,23 @@ Here are some example queries that use Querier to unmarshal results into Go strc
 func (q *Queries) ListPosts(ctx context.Context) ([]Post, error) {
 	const query = "SELECT * FROM posts ORDER BY created_at DESC"
 
-	var posts []Post
+	var (
+	    posts []Post
+	    err = q.querier.Select(ctx, &posts, query)
+    )
 
-	err := q.querier.Select(ctx, &posts, query)
-	if err != nil {
-		return nil, err
-	}
-
-	return posts, nil
+	return posts, err
 }
 
 func (q *Queries) GetPostByID(ctx context.Context, id string) (*Post, error) {
 	const query = "SELECT * from posts where id=?"
 
-	var post Post
+	var (
+	    post Post
+	    err = q.querier.Get(ctx, &post, query, id)
+    )
 
-	err := q.querier.Get(ctx, &post, query, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &post, nil
+	return &post, err
 }
 
 func (q *Queries) SavePost(ctx context.Context, post *Post) error {
