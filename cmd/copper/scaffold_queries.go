@@ -29,7 +29,7 @@ func (c *ScaffoldQueriesCmd) Synopsis() string {
 }
 
 func (c *ScaffoldQueriesCmd) Usage() string {
-	return `copper scaffold:queries foo
+	return `copper scaffold:queries <package>
 `
 }
 

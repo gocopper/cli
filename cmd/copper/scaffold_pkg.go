@@ -30,7 +30,7 @@ func (c *ScaffoldPkgCmd) Synopsis() string {
 }
 
 func (c *ScaffoldPkgCmd) Usage() string {
-	return `copper scaffold:pkg foo
+	return `copper scaffold:pkg <package>
 `
 }
 

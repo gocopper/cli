@@ -29,7 +29,7 @@ func (c *ScaffoldRouterCmd) Synopsis() string {
 }
 
 func (c *ScaffoldRouterCmd) Usage() string {
-	return `copper scaffold:router foo
+	return `copper scaffold:router <package>
 `
 }
 

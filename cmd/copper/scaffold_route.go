@@ -33,7 +33,7 @@ func (c *ScaffoldRouteCmd) Synopsis() string {
 }
 
 func (c *ScaffoldRouteCmd) Usage() string {
-	return `copper scaffold:route -handler= -path= [-method=] foo
+	return `copper scaffold:route -handler= -path= [-method=] <package>
 `
 }
 
