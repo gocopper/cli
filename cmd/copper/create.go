@@ -8,16 +8,16 @@ import (
 	"path"
 	"strings"
 
-	"github.com/gocopper/cli/pkg/codemod/base/server"
-	"github.com/gocopper/cli/pkg/codemod/base/storage"
-	"github.com/gocopper/cli/pkg/codemod/storage/mysql"
-	"github.com/gocopper/cli/pkg/codemod/storage/postgres"
-	"github.com/gocopper/cli/pkg/codemod/storage/sqlite3"
-	"github.com/gocopper/cli/pkg/codemod/web/frontendnone"
-	"github.com/gocopper/cli/pkg/codemod/web/tailwind"
-	"github.com/gocopper/cli/pkg/codemod/web/tailwindpostcss"
-	"github.com/gocopper/cli/pkg/codemod/web/vitereact"
-	"github.com/gocopper/cli/pkg/codemod/web/webgo"
+	"github.com/gocopper/cli/cmd/copper/app/appbase"
+	"github.com/gocopper/cli/cmd/copper/storage/mysql"
+	"github.com/gocopper/cli/cmd/copper/storage/postgres"
+	"github.com/gocopper/cli/cmd/copper/storage/sqlite3"
+	"github.com/gocopper/cli/cmd/copper/storage/storagebase"
+	"github.com/gocopper/cli/cmd/copper/web/frontendnone"
+	"github.com/gocopper/cli/cmd/copper/web/tailwind"
+	"github.com/gocopper/cli/cmd/copper/web/tailwindpostcss"
+	"github.com/gocopper/cli/cmd/copper/web/vitereact"
+	"github.com/gocopper/cli/cmd/copper/web/webbase"
 	"github.com/gocopper/cli/pkg/mk"
 	"github.com/gocopper/cli/pkg/term"
 	"github.com/gocopper/copper/cerrors"
@@ -68,14 +68,14 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 	c.term.InProgressTask(fmt.Sprintf("Create %s with frontend=%s, storage=%s", module, c.frontend, c.storage))
 
-	err := server.NewCodeMod(wd, module).Apply(ctx)
+	err := appbase.NewCodeMod(wd, module).Apply(ctx)
 	if err != nil {
 		c.term.TaskFailed(cerrors.New(err, "failed to apply server code mod", nil))
 		return subcommands.ExitFailure
 	}
 
 	if c.frontend != "none" {
-		err = webgo.NewCodeMod(wd, module).Apply(ctx)
+		err = webbase.NewCodeMod(wd, module).Apply(ctx)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply web code mod", nil))
 			return subcommands.ExitFailure
@@ -122,7 +122,7 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	}
 
 	if c.storage != "none" {
-		err = storage.NewCodeMod(wd, module).Apply(ctx)
+		err = storagebase.NewCodeMod(wd, module).Apply(ctx)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply storage code mod", nil))
 			return subcommands.ExitFailure

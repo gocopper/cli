@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 
-	"github.com/gocopper/cli/pkg/codemod/storage/queries"
+	"github.com/gocopper/cli/cmd/copper/storage/queries"
 	"github.com/gocopper/cli/pkg/mk"
 	"github.com/gocopper/cli/pkg/term"
 	"github.com/google/subcommands"

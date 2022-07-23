@@ -1,4 +1,4 @@
-package server
+package appbase
 
 import (
 	"context"

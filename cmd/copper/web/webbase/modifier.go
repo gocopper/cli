@@ -1,4 +1,4 @@
-package webgo
+package webbase
 
 import (
 	"context"

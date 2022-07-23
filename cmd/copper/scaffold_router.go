@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 
-	"github.com/gocopper/cli/pkg/codemod/web/router"
+	"github.com/gocopper/cli/cmd/copper/web/router"
 	"github.com/gocopper/cli/pkg/mk"
 	"github.com/gocopper/cli/pkg/term"
 	"github.com/google/subcommands"
