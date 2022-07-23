@@ -7,6 +7,7 @@ require (
 	github.com/gocopper/copper v0.6.1
 	github.com/gocopper/wire v0.5.1-0.20220703165107-c353b73a24af
 	github.com/google/subcommands v1.2.0
+	github.com/iancoleman/strcase v0.2.0
 	github.com/otiai10/copy v1.7.0
 	github.com/pterm/pterm v0.12.41
 	github.com/radovskyb/watcher v1.0.7

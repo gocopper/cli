@@ -4,11 +4,47 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 	"text/template"
 
 	"github.com/gocopper/copper/cerrors"
 )
+
+func ReplaceRegexInFile(path, find, text string) error {
+	file, err := os.OpenFile(path, os.O_RDWR, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open file; %v", err)
+	}
+	defer file.Close()
+
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("failed to read file; %v", err)
+	}
+
+	err = file.Truncate(0)
+	if err != nil {
+		return fmt.Errorf("failed to truncate file; %v", err)
+	}
+
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return fmt.Errorf("failed to seek to 0; %v", err)
+	}
+
+	m, err := regexp.Compile(find)
+	if err != nil {
+		return cerrors.New(err, "failed to compile regex", nil)
+	}
+
+	_, err = file.Write(m.ReplaceAll(data, []byte(text)))
+	if err != nil {
+		return cerrors.New(err, "failed to write to file", nil)
+	}
+
+	return nil
+}
 
 func InsertLineAfterInFile(path, find, text string) error {
 	file, err := os.OpenFile(path, os.O_RDWR, 0644)
