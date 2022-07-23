@@ -18,6 +18,7 @@ func main() {
 	subcommands.Register(NewCreateCmd(terminal), "")
 	subcommands.Register(NewBuildCmd(terminal), "")
 	subcommands.Register(NewRunCmd(terminal), "")
+	subcommands.Register(NewMigrateCmd(terminal), "")
 	subcommands.Register(subcommands.HelpCommand(), "")
 
 	subcommands.Register(NewScaffoldPkgCmd(terminal), "scaffold")

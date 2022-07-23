@@ -48,12 +48,7 @@ func (c *BuildCmd) SetFlags(f *flag.FlagSet) {
 func (c *BuildCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	c.term.InProgressTask("Build Project")
 
-	buildMigrate := mk.BuildMigrateSkip
-	if c.migrate {
-		buildMigrate = mk.BuildMigrateAlways
-	}
-
-	err := mk.NewBuilder(".", buildMigrate).Build(ctx)
+	err := mk.NewBuilder(".", c.migrate).Build(ctx)
 	if err != nil {
 		c.term.TaskFailed(err)
 		return subcommands.ExitFailure

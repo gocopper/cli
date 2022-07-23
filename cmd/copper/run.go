@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/gocopper/cli/pkg/mk"
@@ -16,7 +17,8 @@ import (
 
 func NewRunCmd(term *term.Terminal) *RunCmd {
 	return &RunCmd{
-		term: term,
+		term:       term,
+		isFirstRun: true,
 	}
 }
 
@@ -25,6 +27,9 @@ type RunCmd struct {
 
 	migrate bool
 	watch   bool
+
+	isFirstRun     bool
+	isFirstRunOnce sync.Once
 }
 
 func (c *RunCmd) Name() string {
@@ -58,7 +63,6 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 		return c.execute(ctx)
 	}
 
-	didSkipFirstCodeChange := false
 	w := watcher.New()
 
 	w.SetMaxEvents(1)
@@ -91,10 +95,9 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 	for {
 		select {
 		case <-w.Event:
-			if didSkipFirstCodeChange {
+			if !c.isFirstRun {
 				c.term.Text("\n------------------------------------------------------------------------")
 			}
-			didSkipFirstCodeChange = true
 
 			cancelRun()
 			runCtx.Done()
@@ -116,20 +119,21 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 
 func (c *RunCmd) execute(ctx context.Context) subcommands.ExitStatus {
 	c.term.InProgressTask("Build Project")
-	
-	buildMigrate := mk.BuildMigrateSkip
-	if c.migrate {
-		buildMigrate = mk.BuildMigrateOnlyIfDoesntExist
-	}
 
-	err := mk.NewBuilder(".", buildMigrate).Build(ctx)
+	migrate := c.migrate && c.isFirstRun
+
+	c.isFirstRunOnce.Do(func() {
+		c.isFirstRun = false
+	})
+
+	err := mk.NewBuilder(".", migrate).Build(ctx)
 	if err != nil {
 		c.term.TaskFailed(err)
 		return subcommands.ExitFailure
 	}
 	c.term.TaskSucceeded()
 
-	if c.migrate {
+	if migrate {
 		c.term.Section("Run Database Migrations")
 		err := mk.NewRunner(".", "migrate.out", "-set", "csql.migrations.source=\"dir\"").Run(ctx)
 		if err != nil {

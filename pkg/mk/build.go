@@ -14,13 +14,7 @@ import (
 //go:embed embed.go.tmpl
 var embedGo string
 
-const (
-	BuildMigrateSkip = iota + 1
-	BuildMigrateOnlyIfDoesntExist
-	BuildMigrateAlways
-)
-
-func NewBuilder(wd string, migrate int) *Builder {
+func NewBuilder(wd string, migrate bool) *Builder {
 	return &Builder{
 		WorkingDir: wd,
 		Migrate:    migrate,
@@ -29,7 +23,7 @@ func NewBuilder(wd string, migrate int) *Builder {
 
 type Builder struct {
 	WorkingDir string
-	Migrate    int
+	Migrate    bool
 }
 
 func (b *Builder) Build(ctx context.Context) error {
@@ -65,7 +59,7 @@ func (b *Builder) Build(ctx context.Context) error {
 		return cerrors.New(err, "failed to build app binary", nil)
 	}
 
-	if b.Migrate == BuildMigrateAlways || (b.Migrate == BuildMigrateOnlyIfDoesntExist && !projectHasMigrateBinary(b.WorkingDir)) {
+	if b.Migrate {
 		err := wireGen(ctx, b.WorkingDir, path.Join(module, "cmd", "migrate"))
 		if err != nil {
 			return cerrors.New(err, "failed to run wire dependencies for cmd/migrate", nil)
