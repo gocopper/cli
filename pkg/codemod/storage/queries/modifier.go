@@ -24,10 +24,6 @@ type CodeMod struct {
 	Pkg        string
 }
 
-func (cm *CodeMod) Name() string {
-	return "queries"
-}
-
 func (cm *CodeMod) Apply(ctx context.Context) error {
 	_, err := codemod.CreateTemplateFiles(templatesFS, cm.WorkingDir, map[string]string{
 		"pkg": cm.Pkg,

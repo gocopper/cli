@@ -37,12 +37,6 @@ func projectHasWeb(projectPath string) bool {
 	return err == nil
 }
 
-func projectHasMigrateBinary(projectPath string) bool {
-	_, err := os.Stat(path.Join(projectPath, "build/migrate.out"))
-
-	return err == nil
-}
-
 func goModTidy(ctx context.Context, workingDir string) error {
 	cmd := exec.CommandContext(ctx, "go", "mod", "tidy")
 

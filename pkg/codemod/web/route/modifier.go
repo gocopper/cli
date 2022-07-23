@@ -26,10 +26,6 @@ type CodeMod struct {
 	Handler    string
 }
 
-func (cm *CodeMod) Name() string {
-	return "route"
-}
-
 func (cm *CodeMod) Apply(ctx context.Context) error {
 	err := codemod.AddImports(path.Join(cm.WorkingDir, "pkg", cm.Pkg, "router.go"), []string{
 		"net/http",

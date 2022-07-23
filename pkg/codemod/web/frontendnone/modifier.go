@@ -18,10 +18,6 @@ type CodeMod struct {
 	WorkingDir string
 }
 
-func (cm *CodeMod) Name() string {
-	return "frontendnone"
-}
-
 func (cm *CodeMod) Apply(ctx context.Context) error {
 	err := codemod.InsertWireModuleItems(path.Join(cm.WorkingDir, "cmd", "app", "wire.go"), `
 chttp.WireModuleEmptyHTML,`)

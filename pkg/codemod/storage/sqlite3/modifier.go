@@ -21,10 +21,6 @@ type CodeMod struct {
 	Module     string
 }
 
-func (cm *CodeMod) Name() string {
-	return "sqlite3"
-}
-
 func (cm *CodeMod) Apply(ctx context.Context) error {
 	err := codemod.AppendTextToFile(path.Join(cm.WorkingDir, "config", "base.toml"), fmt.Sprintf(`
 

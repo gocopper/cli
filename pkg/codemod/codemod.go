@@ -5,6 +5,5 @@ import (
 )
 
 type CodeModifier interface {
-	Name() string
 	Apply(ctx context.Context) error
 }

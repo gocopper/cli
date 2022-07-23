@@ -20,10 +20,6 @@ type CodeMod struct {
 	Module     string
 }
 
-func (cm *CodeMod) Name() string {
-	return "mysql"
-}
-
 func (cm *CodeMod) Apply(ctx context.Context) error {
 	err := codemod.AppendTextToFile(path.Join(cm.WorkingDir, "config", "base.toml"), `
 

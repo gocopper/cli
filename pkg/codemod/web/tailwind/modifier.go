@@ -26,10 +26,6 @@ type CodeMod struct {
 	Module     string
 }
 
-func (cm *CodeMod) Name() string {
-	return "tailwind"
-}
-
 func (cm *CodeMod) Apply(ctx context.Context) error {
 	_, err := codemod.CreateTemplateFiles(templatesFS, cm.WorkingDir, map[string]string{
 		"PackageJSONName": path.Base(cm.Module),

@@ -18,8 +18,6 @@ func NewMigrateCmd(term *term.Terminal) *MigrateCmd {
 
 type MigrateCmd struct {
 	term *term.Terminal
-
-	migrate bool
 }
 
 func (c *MigrateCmd) Name() string {
