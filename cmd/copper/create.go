@@ -68,14 +68,14 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 	c.term.InProgressTask(fmt.Sprintf("Create %s with frontend=%s, storage=%s", module, c.frontend, c.storage))
 
-	err := appbase.NewCodeMod(wd, module).Apply(ctx)
+	err := appbase.Apply(wd, module)
 	if err != nil {
 		c.term.TaskFailed(cerrors.New(err, "failed to apply server code mod", nil))
 		return subcommands.ExitFailure
 	}
 
 	if c.frontend != "none" {
-		err = webbase.NewCodeMod(wd, module).Apply(ctx)
+		err = webbase.Apply(wd)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply web code mod", nil))
 			return subcommands.ExitFailure
@@ -84,7 +84,7 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 	switch c.frontend {
 	case "none":
-		err = frontendnone.NewCodeMod(wd).Apply(ctx)
+		err = frontendnone.Apply(wd)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply frontend none code mod", nil))
 			return subcommands.ExitFailure
@@ -93,25 +93,25 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 		// note: already applied the web code mod
 		break
 	case "go:tailwind":
-		err = tailwind.NewCodeMod(wd, module).Apply(ctx)
+		err = tailwind.Apply(wd)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply go:tailwind code mod", nil))
 			return subcommands.ExitFailure
 		}
 	case "vite:react":
-		err = vitereact.NewCodeMod(wd, module).Apply(ctx)
+		err = vitereact.Apply(wd)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply vite:react code mod", nil))
 			return subcommands.ExitFailure
 		}
 	case "vite:react:tailwind":
-		err = vitereact.NewCodeMod(wd, module).Apply(ctx)
+		err = vitereact.Apply(wd)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply vite:react code mod", nil))
 			return subcommands.ExitFailure
 		}
 
-		err = tailwindpostcss.NewCodeMod(wd, module).Apply(ctx)
+		err = tailwindpostcss.Apply(wd)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply tailwind (postcss) code mod", nil))
 			return subcommands.ExitFailure
@@ -122,7 +122,7 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	}
 
 	if c.storage != "none" {
-		err = storagebase.NewCodeMod(wd, module).Apply(ctx)
+		err = storagebase.Apply(wd)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply storage code mod", nil))
 			return subcommands.ExitFailure
@@ -130,19 +130,19 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 
 		switch c.storage {
 		case "sqlite3":
-			err = sqlite3.NewCodeMod(wd, module).Apply(ctx)
+			err = sqlite3.Apply(wd)
 			if err != nil {
 				c.term.TaskFailed(cerrors.New(err, "failed to apply sqlite3 code mod", nil))
 				return subcommands.ExitFailure
 			}
 		case "postgres":
-			err = postgres.NewCodeMod(wd, module).Apply(ctx)
+			err = postgres.Apply(wd)
 			if err != nil {
 				c.term.TaskFailed(cerrors.New(err, "failed to apply postgres code mod", nil))
 				return subcommands.ExitFailure
 			}
 		case "mysql":
-			err = mysql.NewCodeMod(wd, module).Apply(ctx)
+			err = mysql.Apply(wd)
 			if err != nil {
 				c.term.TaskFailed(cerrors.New(err, "failed to apply mysql code mod", nil))
 				return subcommands.ExitFailure

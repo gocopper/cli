@@ -1,38 +1,11 @@
 package frontendnone
 
 import (
-	"context"
-	"path"
-
 	"github.com/gocopper/cli/pkg/codemod"
-	"github.com/gocopper/copper/cerrors"
 )
 
-func NewCodeMod(wd string) *CodeMod {
-	return &CodeMod{
-		WorkingDir: wd,
-	}
-}
-
-type CodeMod struct {
-	WorkingDir string
-}
-
-func (cm *CodeMod) Apply(ctx context.Context) error {
-	err := codemod.InsertWireModuleItems(path.Join(cm.WorkingDir, "cmd", "app", "wire.go"), `
-chttp.WireModuleEmptyHTML,`)
-	if err != nil {
-		return cerrors.New(err, "failed to add web wire modules to cmd/app/wire.go", nil)
-	}
-
-	err = codemod.AddImports(path.Join(cm.WorkingDir, "pkg", "app", "router.go"), []string{
-		"net/http",
-	})
-	if err != nil {
-		return cerrors.New(err, "failed to add net/http import to pkg/app/router.go", nil)
-	}
-
-	err = codemod.InsertRoute(path.Join(cm.WorkingDir, "pkg", "app", "router.go"), codemod.InsertRouteParams{
+func Apply(wd string) error {
+	var indexRoute = codemod.ModInsertCHTTPRouteParams{
 		Path:        "/",
 		Method:      "Get",
 		HandlerName: "HandleIndex",
@@ -44,10 +17,16 @@ chttp.WireModuleEmptyHTML,`)
 			"frontend_stack": "none",
 		},
 	})`,
-	})
-	if err != nil {
-		return cerrors.New(err, "failed to insert route for index route", nil)
 	}
 
-	return nil
+	return codemod.
+		New(wd).
+		OpenFile("./cmd/app/wire.go").
+		Apply(codemod.ModAddProviderToWireSet("chttp.WireModuleEmptyHTML")).
+		CloseAndOpen("./pkg/app/router.go").
+		Apply(
+			codemod.ModAddGoImports([]string{"net/http"}),
+			codemod.ModInsertCHTTPRoute(indexRoute),
+		).
+		CloseAndDone()
 }

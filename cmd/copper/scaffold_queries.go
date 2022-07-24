@@ -43,7 +43,7 @@ func (c *ScaffoldQueriesCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...
 
 	c.term.InProgressTask("Scaffold queries")
 
-	err := queries.NewCodeMod(".", f.Arg(0)).Apply(ctx)
+	err := queries.Apply(".", f.Arg(0))
 	if err != nil {
 		c.term.TaskFailed(err)
 		return subcommands.ExitFailure

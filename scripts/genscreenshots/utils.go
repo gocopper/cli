@@ -14,13 +14,6 @@ import (
 	"github.com/gocopper/copper/cerrors"
 )
 
-func runCmd(wd, name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Dir = wd
-
-	return cmd.Run()
-}
-
 func startCmd(wd, name string, args ...string) (*exec.Cmd, error) {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = wd

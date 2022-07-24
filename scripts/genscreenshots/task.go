@@ -6,6 +6,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/gocopper/cli/pkg/codemod"
 	"github.com/gocopper/copper/cerrors"
 )
 
@@ -31,27 +32,73 @@ func runTask(s *ScreenGrabber) error {
 	defer func() { _ = os.RemoveAll(wd) }()
 
 	var (
-		indexURL           = fmt.Sprintf("http://localhost:%d", s.HTTPPort)
-		copperBin          = path.Join(wd, "copper.out")
-		projectDir         = path.Join(wd, "starship")
-		screenshotFilePath = path.Join(s.ScreenshotsOutDir, fmt.Sprintf("%s.png", s.Stack.Name))
+		indexURL                  = fmt.Sprintf("http://localhost:%d", s.HTTPPort)
+		rocketsURL                = fmt.Sprintf("http://localhost:%d/rockets", s.HTTPPort)
+		copperBin                 = path.Join(wd, "copper.out")
+		projectDir                = path.Join(wd, "starship")
+		screenshotIndexFilePath   = path.Join(s.ScreenshotsOutDir, fmt.Sprintf("%s_index.png", s.Stack.Name))
+		screenshotRocketsFilePath = path.Join(s.ScreenshotsOutDir, fmt.Sprintf("%s_rockets.png", s.Stack.Name))
 	)
 
-	err = runCmd(s.CLIPkgPath, "go", "build", "-o", copperBin, ".")
+	err = codemod.
+		New(s.CLIPkgPath).
+		RunCmd("go", "build", "-o", copperBin, ".").
+		CdAbs(wd).
+		RunCmd(copperBin, "create", "-frontend", s.Stack.Name, "github.com/gocopper/starship").
+		CdAbs(projectDir).
+		RunCmd(copperBin, "scaffold:pkg", "rockets").
+		RunCmd(copperBin, "scaffold:queries", "rockets").
+		RunCmd(copperBin, "scaffold:router", "rockets").
+		RunCmd(copperBin, "scaffold:route", "-handler", "HandleListRockets", "-path", "/rockets", "rockets").
+		OpenFile("./migrations/0001_initial.sql").
+		Apply(
+			codemod.ModInsertLineAfter(
+				"-- +migrate Up",
+				`create table rockets (name text); insert into rockets values ('falcon'), ('saturn'), ('atlas');`,
+			),
+		).
+		CloseAndOpen("./pkg/rockets/models.go").
+		Apply(
+			codemod.ModAppendText(`
+type Rocket struct {
+	Name string
+}`),
+		).
+		CloseAndOpen("./pkg/rockets/queries.go").
+		Apply(
+			codemod.ModAddGoImports([]string{"context"}),
+			codemod.ModAppendText(`
+func (q *Queries) ListRockets(ctx context.Context) ([]Rocket, error) {
+	const query = "SELECT * FROM rockets"
+
+	var (
+	    rockets []Rocket
+	    err = q.querier.Select(ctx, &rockets, query)
+    )
+
+	return rockets, err
+}`),
+		).
+		CloseAndOpen("./pkg/rockets/router.go").
+		Apply(
+			codemod.ModInsertLineAfter("type NewRouterParams struct {", "Queries *Queries"),
+			codemod.ModInsertLineAfter("return &Router{", "queries: p.Queries,"),
+			codemod.ModInsertLineAfter("type Router struct {", "queries *Queries"),
+			codemod.ModInsertLineAfter("HandleListRockets(w http.ResponseWriter, r *http.Request) {", `
+	rockets, err := ro.queries.ListRockets(r.Context())
 	if err != nil {
-		return cerrors.New(err, "failed to build copper cli", map[string]interface{}{
-			"pkgPath": s.CLIPkgPath,
-			"out":     copperBin,
-		})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	err = runCmd(wd, copperBin, "create", "-frontend", s.Stack.Name, "github.com/gocopper/starship")
+	ro.rw.WriteJSON(w, chttp.WriteJSONParams{
+		Data: rockets,
+	})
+`),
+		).
+		CloseAndDone()
 	if err != nil {
-		return cerrors.New(err, "failed to create copper project", map[string]interface{}{
-			"wd":    wd,
-			"bin":   copperBin,
-			"stack": s.Stack,
-		})
+		return cerrors.New(err, "failed to create copper project", nil)
 	}
 
 	err = setCHTTPPort(projectDir, s.HTTPPort)
@@ -91,11 +138,19 @@ func runTask(s *ScreenGrabber) error {
 
 	time.Sleep(15 * time.Second)
 
-	err = saveScreenshot(indexURL, screenshotFilePath)
+	err = saveScreenshot(indexURL, screenshotIndexFilePath)
 	if err != nil {
 		return cerrors.New(err, "failed to save screenshot", map[string]interface{}{
 			"url":      indexURL,
-			"filePath": screenshotFilePath,
+			"filePath": screenshotIndexFilePath,
+		})
+	}
+
+	err = saveScreenshot(rocketsURL, screenshotRocketsFilePath)
+	if err != nil {
+		return cerrors.New(err, "failed to save screenshot", map[string]interface{}{
+			"url":      rocketsURL,
+			"filePath": screenshotRocketsFilePath,
 		})
 	}
 

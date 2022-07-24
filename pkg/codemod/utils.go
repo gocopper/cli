@@ -1,7 +1,7 @@
 package codemod
 
 import (
-	"embed"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,7 +11,17 @@ import (
 	"github.com/gocopper/copper/cerrors"
 )
 
-func CreateTemplateFiles(templatesFS embed.FS, dest string, params map[string]string, overwrite bool) ([]string, error) {
+func mergeMaps(maps ...map[string]string) map[string]string {
+	var ret = make(map[string]string)
+	for i := range maps {
+		for k, v := range maps[i] {
+			ret[k] = v
+		}
+	}
+	return ret
+}
+
+func createTemplateFiles(templatesFS fs.FS, dest string, params map[string]string, overwrite bool) ([]string, error) {
 	var created = make([]string, 0)
 
 	tmpl, err := template.ParseFS(templatesFS, "tmpl/*.tmpl")
@@ -50,7 +60,7 @@ func CreateTemplateFiles(templatesFS embed.FS, dest string, params map[string]st
 			})
 		}
 
-		err = CreateTemplateFile(t, filePath, params, overwrite)
+		err = createTemplateFile(t, filePath, params, overwrite)
 		if err != nil {
 			return created, cerrors.New(err, "failed to create file", map[string]interface{}{
 				"file":      filePath,
@@ -64,7 +74,7 @@ func CreateTemplateFiles(templatesFS embed.FS, dest string, params map[string]st
 	return created, nil
 }
 
-func CreateTemplateFile(t *template.Template, dest string, data interface{}, overwrite bool) error {
+func createTemplateFile(t *template.Template, dest string, data interface{}, overwrite bool) error {
 	err := os.MkdirAll(filepath.Dir(dest), 0755)
 	if err != nil {
 		return err

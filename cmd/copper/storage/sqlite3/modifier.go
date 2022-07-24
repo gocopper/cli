@@ -1,56 +1,34 @@
 package sqlite3
 
 import (
-	"context"
 	"fmt"
 	"path"
 
 	"github.com/gocopper/cli/pkg/codemod"
-	"github.com/gocopper/copper/cerrors"
 )
 
-func NewCodeMod(wd, module string) *CodeMod {
-	return &CodeMod{
-		WorkingDir: wd,
-		Module:     module,
-	}
-}
+func Apply(wd string) error {
+	var (
+		csqlConfig string
+	)
 
-type CodeMod struct {
-	WorkingDir string
-	Module     string
-}
-
-func (cm *CodeMod) Apply(ctx context.Context) error {
-	err := codemod.AppendTextToFile(path.Join(cm.WorkingDir, "config", "base.toml"), fmt.Sprintf(`
+	return codemod.
+		New(wd).
+		ExtractData(codemod.ExtractGoModulePath()).
+		Do(func(data map[string]string) error {
+			csqlConfig = fmt.Sprintf(`
 
 [csql]
 dialect="sqlite3"
 dsn="./%s.db"
-`, path.Base(cm.Module)))
-	if err != nil {
-		return cerrors.New(err, "failed to add csql config", map[string]interface{}{
-			"wd": cm.WorkingDir,
-		})
-	}
-
-	err = codemod.AddImports(path.Join(cm.WorkingDir, "cmd/app/wire.go"), []string{
-		"_ \"github.com/mattn/go-sqlite3\"",
-	})
-	if err != nil {
-		return cerrors.New(err, "failed to add go-sqlite3 import to cmd/app/wire.go", map[string]interface{}{
-			"wd": cm.WorkingDir,
-		})
-	}
-
-	err = codemod.AddImports(path.Join(cm.WorkingDir, "cmd/migrate/wire.go"), []string{
-		"_ \"github.com/mattn/go-sqlite3\"",
-	})
-	if err != nil {
-		return cerrors.New(err, "failed to add go-sqlite3 import to cmd/migrate/wire.go", map[string]interface{}{
-			"wd": cm.WorkingDir,
-		})
-	}
-
-	return nil
+`, path.Base(data["GoModule"]))
+			return nil
+		}).
+		OpenFile("./config/base.toml").
+		Apply(codemod.ModAppendText(csqlConfig)).
+		CloseAndOpen("./cmd/app/wire.go").
+		Apply(codemod.ModAddGoImports([]string{"_ \"github.com/mattn/go-sqlite3\""})).
+		CloseAndOpen("./cmd/migrate/wire.go").
+		Apply(codemod.ModAddGoImports([]string{"_ \"github.com/mattn/go-sqlite3\""})).
+		CloseAndDone()
 }

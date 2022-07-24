@@ -5,7 +5,6 @@ import (
 	"flag"
 
 	"github.com/gocopper/cli/cmd/copper/web/router"
-	"github.com/gocopper/cli/pkg/codemod"
 	"github.com/gocopper/cli/pkg/mk"
 	"github.com/gocopper/cli/pkg/term"
 	"github.com/google/subcommands"
@@ -44,13 +43,7 @@ func (c *ScaffoldRouterCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...i
 
 	c.term.InProgressTask("Scaffold router")
 
-	module, err := codemod.GetGoModulePath(".")
-	if err != nil {
-		c.term.TaskFailed(err)
-		return subcommands.ExitFailure
-	}
-
-	err = router.NewCodeMod(".", module, f.Arg(0)).Apply(ctx)
+	err := router.Apply(".", f.Arg(0))
 	if err != nil {
 		c.term.TaskFailed(err)
 		return subcommands.ExitFailure

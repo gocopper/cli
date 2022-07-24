@@ -51,7 +51,12 @@ func (c *ScaffoldRouteCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...in
 
 	c.term.InProgressTask("Scaffold route")
 
-	err := route.NewCodeMod(".", f.Arg(0), c.path, c.method, c.handler).Apply(ctx)
+	err := route.Apply(".", route.ApplyParams{
+		Pkg:     f.Arg(0),
+		Path:    c.path,
+		Method:  c.method,
+		Handler: c.handler,
+	})
 	if err != nil {
 		c.term.TaskFailed(err)
 		return subcommands.ExitFailure

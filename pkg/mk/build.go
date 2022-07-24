@@ -44,10 +44,11 @@ func (b *Builder) Build(ctx context.Context) error {
 		return cerrors.New(err, "failed to run go mod tidy", nil)
 	}
 
-	module, err := codemod.GetGoModulePath(b.WorkingDir)
+	moduleData, err := codemod.ExtractGoModulePath()(b.WorkingDir)
 	if err != nil {
 		return cerrors.New(err, "failed to get go module path", nil)
 	}
+	module := moduleData["GoModule"]
 
 	err = wireGen(ctx, b.WorkingDir, path.Join(module, "cmd", "app"))
 	if err != nil {

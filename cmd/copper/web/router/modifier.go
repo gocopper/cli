@@ -1,67 +1,39 @@
 package router
 
 import (
-	"context"
 	"embed"
 	"fmt"
 	"path"
 
 	"github.com/gocopper/cli/pkg/codemod"
-	"github.com/gocopper/copper/cerrors"
 	"github.com/iancoleman/strcase"
 )
 
 //go:embed tmpl/*
 var templatesFS embed.FS
 
-func NewCodeMod(wd, module, pkg string) *CodeMod {
-	return &CodeMod{
-		WorkingDir: wd,
-		Module:     module,
-		Pkg:        pkg,
-	}
-}
+func Apply(wd, pkg string) error {
+	var (
+		routerDecl = fmt.Sprintf(`%s
 
-type CodeMod struct {
-	WorkingDir string
-	Module     string
-	Pkg        string
-}
+Logger clogger.Logger`, strcase.ToCamel(pkg)+" *"+pkg+".Router")
+		routerWireProviders = `wire.Struct(new(NewRouterParams), "*"),
+	NewRouter`
+	)
 
-func (cm *CodeMod) Apply(ctx context.Context) error {
-	_, err := codemod.CreateTemplateFiles(templatesFS, cm.WorkingDir, map[string]string{
-		"pkg": cm.Pkg,
-	}, false)
-	if err != nil {
-		return cerrors.New(err, "failed to create template files", nil)
-	}
-
-	err = codemod.AddImports(path.Join(cm.WorkingDir, "pkg/app/handler.go"), []string{
-		path.Join(cm.Module, "pkg", cm.Pkg),
-	})
-	if err != nil {
-		return cerrors.New(err, "failed to add imports to pkg/app/handler.go", nil)
-	}
-
-	err = codemod.ReplaceRegexInFile(path.Join(cm.WorkingDir, "pkg/app/handler.go"), "Logger +clogger\\.Logger", fmt.Sprintf(`%s
-
-Logger clogger.Logger`, strcase.ToCamel(cm.Pkg)+" *"+cm.Pkg+".Router"))
-	if err != nil {
-		return cerrors.New(err, "failed to add router decl to pkg/app/handler.go", nil)
-	}
-
-	err = codemod.InsertLineAfterInFile(path.Join(cm.WorkingDir, "pkg/app/handler.go"), "Routers: []chttp.Router{", "p."+strcase.ToCamel(cm.Pkg)+",")
-	if err != nil {
-		return cerrors.New(err, "failed add router to []chttp.Router slice", nil)
-	}
-
-	err = codemod.InsertWireModuleItems(path.Join(cm.WorkingDir, "pkg", cm.Pkg, "wire.go"), `
-	wire.Struct(new(NewRouterParams), "*"),
-	NewRouter,
-`)
-	if err != nil {
-		return cerrors.New(err, "failed to update wire.go", nil)
-	}
-
-	return nil
+	return codemod.
+		New(wd).
+		ExtractData(codemod.ExtractGoModulePath()).
+		CreateTemplateFiles(templatesFS, map[string]string{
+			"pkg": pkg,
+		}, false).
+		OpenFile("./pkg/app/handler.go").
+		Apply(
+			codemod.ModAddGoImports([]string{path.Join("{{.GoModule}}/pkg", pkg)}),
+			codemod.ModReplaceRegex("Logger +clogger\\.Logger", routerDecl),
+			codemod.ModInsertLineAfter("Routers: []chttp.Router{", "p."+strcase.ToCamel(pkg)+","),
+		).
+		CloseAndOpen(path.Join("./pkg", pkg, "wire.go")).
+		Apply(codemod.ModAddProviderToWireSet(routerWireProviders)).
+		CloseAndDone()
 }
