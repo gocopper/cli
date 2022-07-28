@@ -12,11 +12,11 @@ var templatesFS embed.FS
 
 func Apply(wd, pkg string) error {
 	return codemod.
-		New(wd).
-		CreateTemplateFiles(templatesFS, map[string]string{
+		OpenDir(wd).
+		Apply(codemod.CreateTemplateFiles(templatesFS, map[string]string{
 			"pkg": pkg,
-		}, false).
+		}, false)).
 		OpenFile(path.Join("./pkg", pkg, "wire.go")).
-		Apply(codemod.ModAddProviderToWireSet("NewQueries")).
+		Apply(codemod.AddProviderToWireSet("NewQueries")).
 		CloseAndDone()
 }

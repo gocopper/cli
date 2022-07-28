@@ -18,14 +18,14 @@ dsn="user=postgres password=1234 host=127.0.0.1 port=5432 dbname=pg sslmode=disa
 `
 	)
 
-	return codemod.New(wd).
+	return codemod.OpenDir(wd).
 		OpenFile("./config/base.toml").
-		Apply(codemod.ModAppendText(csqlBaseConfig)).
+		Apply(codemod.AppendText(csqlBaseConfig)).
 		CloseAndOpen("./config/dev.toml").
-		Apply(codemod.ModAppendText(csqlDevConfig)).
+		Apply(codemod.AppendText(csqlDevConfig)).
 		CloseAndOpen("./cmd/app/wire.go").
-		Apply(codemod.ModAddGoImports([]string{"_ \"github.com/lib/pq\""})).
+		Apply(codemod.AddGoImports([]string{"_ \"github.com/lib/pq\""})).
 		CloseAndOpen("./cmd/migrate/wire.go").
-		Apply(codemod.ModAddGoImports([]string{"_ \"github.com/lib/pq\""})).
+		Apply(codemod.AddGoImports([]string{"_ \"github.com/lib/pq\""})).
 		CloseAndDone()
 }

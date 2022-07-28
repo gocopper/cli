@@ -21,7 +21,7 @@ web.HTMLRenderFuncs`
 use_local_html = true
 render_html_error = true
 `
-		indexPageRoute = codemod.ModInsertCHTTPRouteParams{
+		indexPageRoute = codemod.InsertCHTTPRouteParams{
 			Path:        "/",
 			Method:      "Get",
 			HandlerName: "HandleIndexPage",
@@ -32,26 +32,26 @@ render_html_error = true
 	)
 
 	return codemod.
-		New(wd).
+		OpenDir(wd).
 		ExtractData(codemod.ExtractGoModulePath()).
-		CreateTemplateFiles(templatesFS, nil, true).
+		Apply(codemod.CreateTemplateFiles(templatesFS, nil, true)).
 		OpenFile("./cmd/app/wire.go").
-		Apply(codemod.ModAddGoImports([]string{
+		Apply(codemod.AddGoImports([]string{
 			path.Join("{{.GoModule}}/web"),
 			path.Join("{{.GoModule}}/web/build"),
 		})).
-		Apply(codemod.ModAddProviderToWireSet(webWireProviders)).
+		Apply(codemod.AddProviderToWireSet(webWireProviders)).
 		CloseAndOpen("./pkg/app/router.go").
 		Apply(
-			codemod.ModAddGoImports([]string{"net/http"}),
-			codemod.ModInsertCHTTPRoute(indexPageRoute),
+			codemod.AddGoImports([]string{"net/http"}),
+			codemod.InsertCHTTPRoute(indexPageRoute),
 		).
 		CloseAndOpen("./config/dev.toml").
-		Apply(codemod.ModAppendText(chttpDevConfig)).
+		Apply(codemod.AppendText(chttpDevConfig)).
 		CloseAndOpen("./pkg/app/handler.go").
 		Apply(
-			codemod.ModInsertLineAfter("*Router", "HTML *chttp.HTMLRouter"),
-			codemod.ModInsertLineAfter("[]chttp.Router{", "p.HTML,"),
+			codemod.InsertLineAfter("*Router", "HTML *chttp.HTMLRouter"),
+			codemod.InsertLineAfter("[]chttp.Router{", "p.HTML,"),
 		).
 		CloseAndDone()
 }

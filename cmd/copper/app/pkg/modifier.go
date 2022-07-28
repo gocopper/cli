@@ -16,15 +16,15 @@ func Apply(wd, pkg string) error {
 		pkgWireModule = pkg + ".WireModule"
 	)
 
-	return codemod.New(wd).
+	return codemod.OpenDir(wd).
 		ExtractData(codemod.ExtractGoModulePath()).
-		CreateTemplateFiles(templatesFS, map[string]string{
+		Apply(codemod.CreateTemplateFiles(templatesFS, map[string]string{
 			"pkg": pkg,
-		}, false).
+		}, false)).
 		OpenFile("./pkg/app/wire.go").
 		Apply(
-			codemod.ModAddGoImports([]string{pkgImportPath}),
-			codemod.ModAddProviderToWireSet(pkgWireModule),
+			codemod.AddGoImports([]string{pkgImportPath}),
+			codemod.AddProviderToWireSet(pkgWireModule),
 		).
 		CloseAndDone()
 }

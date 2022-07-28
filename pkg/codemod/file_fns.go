@@ -9,9 +9,9 @@ import (
 	"github.com/gocopper/copper/cerrors"
 )
 
-type FileModifierFn func(contents string, data map[string]string) (string, error)
+type FileFn func(contents string, data map[string]string) (string, error)
 
-func ModReplaceRegex(expr, text string) FileModifierFn {
+func ReplaceRegex(expr, text string) FileFn {
 	return func(contents string, data map[string]string) (string, error) {
 		m, err := regexp.Compile(expr)
 		if err != nil {
@@ -22,7 +22,7 @@ func ModReplaceRegex(expr, text string) FileModifierFn {
 	}
 }
 
-func ModInsertText(text string, offset int) FileModifierFn {
+func InsertText(text string, offset int) FileFn {
 	return func(contents string, data map[string]string) (string, error) {
 		var (
 			newContents = make([]byte, 0)
@@ -39,25 +39,37 @@ func ModInsertText(text string, offset int) FileModifierFn {
 	}
 }
 
-func ModInsertLineAfter(find, insert string) FileModifierFn {
+func InsertLineAfter(find, insert string) FileFn {
 	return func(contents string, data map[string]string) (string, error) {
 		return strings.Replace(contents, find, find+"\n"+insert+"\n", 1), nil
 	}
 }
 
-func ModAppendText(text string) FileModifierFn {
+func AppendText(text string) FileFn {
 	return func(contents string, data map[string]string) (string, error) {
-		return contents + text, nil
+		var out strings.Builder
+
+		t, err := template.New(text).Parse(text)
+		if err != nil {
+			return "", err
+		}
+
+		err = t.Execute(&out, data)
+		if err != nil {
+			return "", err
+		}
+
+		return contents + out.String(), nil
 	}
 }
 
-func ModAddProviderToWireSet(provider string) FileModifierFn {
+func AddProviderToWireSet(provider string) FileFn {
 	return func(contents string, data map[string]string) (string, error) {
-		return ModReplaceRegex("wire\\.NewSet\\(", "wire.NewSet(\n"+provider+",\n")(contents, data)
+		return ReplaceRegex("wire\\.NewSet\\(", "wire.NewSet(\n"+provider+",\n")(contents, data)
 	}
 }
 
-func ModAddGoImports(imports []string) FileModifierFn {
+func AddGoImports(imports []string) FileFn {
 	const pkgImportStmt = "import ("
 
 	return func(contents string, data map[string]string) (string, error) {
@@ -91,11 +103,11 @@ func ModAddGoImports(imports []string) FileModifierFn {
 			importStmts = append(importStmts, d)
 		}
 
-		return ModInsertText(strings.Join(importStmts, "\n")+"\n", pos+len(pkgImportStmt)+1)(contents, data)
+		return InsertText(strings.Join(importStmts, "\n")+"\n", pos+len(pkgImportStmt)+1)(contents, data)
 	}
 }
 
-func ModAddJSONSection(section string, sectionContents interface{}) FileModifierFn {
+func AddJSONSection(section string, sectionContents interface{}) FileFn {
 	return func(contents string, data map[string]string) (string, error) {
 		var (
 			contentsJ map[string]interface{}
@@ -122,14 +134,14 @@ func ModAddJSONSection(section string, sectionContents interface{}) FileModifier
 	}
 }
 
-type ModInsertCHTTPRouteParams struct {
+type InsertCHTTPRouteParams struct {
 	Path        string
 	Method      string
 	HandlerName string
 	HandlerBody string
 }
 
-func ModInsertCHTTPRoute(p ModInsertCHTTPRouteParams) FileModifierFn {
+func InsertCHTTPRoute(p InsertCHTTPRouteParams) FileFn {
 	return func(contents string, data map[string]string) (string, error) {
 		var (
 			routeOut   strings.Builder
@@ -156,12 +168,12 @@ func (ro *Router) {{.HandlerName}}(w http.ResponseWriter, r *http.Request) {
 			return "", err
 		}
 
-		contents, err := ModInsertLineAfter("[]chttp.Route{", routeOut.String())(contents, data)
+		contents, err := InsertLineAfter("[]chttp.Route{", routeOut.String())(contents, data)
 		if err != nil {
 			return "", err
 		}
 
-		contents, err = ModAppendText(handlerOut.String())(contents, data)
+		contents, err = AppendText(handlerOut.String())(contents, data)
 		if err != nil {
 			return "", err
 		}

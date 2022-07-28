@@ -41,33 +41,35 @@ func runTask(s *ScreenGrabber) error {
 	)
 
 	err = codemod.
-		New(s.CLIPkgPath).
-		RunCmd("go", "build", "-o", copperBin, ".").
+		OpenDir(s.CLIPkgPath).
+		Apply(codemod.RunCmd("go", "build", "-o", copperBin, ".")).
 		CdAbs(wd).
-		RunCmd(copperBin, "create", "-frontend", s.Stack.Name, "github.com/gocopper/starship").
+		Apply(codemod.RunCmd(copperBin, "create", "-frontend", s.Stack.Name, "github.com/gocopper/starship")).
 		CdAbs(projectDir).
-		RunCmd(copperBin, "scaffold:pkg", "rockets").
-		RunCmd(copperBin, "scaffold:queries", "rockets").
-		RunCmd(copperBin, "scaffold:router", "rockets").
-		RunCmd(copperBin, "scaffold:route", "-handler", "HandleListRockets", "-path", "/rockets", "rockets").
+		Apply(
+			codemod.RunCmd(copperBin, "scaffold:pkg", "rockets"),
+			codemod.RunCmd(copperBin, "scaffold:queries", "rockets"),
+			codemod.RunCmd(copperBin, "scaffold:router", "rockets"),
+			codemod.RunCmd(copperBin, "scaffold:route", "-handler", "HandleListRockets", "-path", "/rockets", "rockets"),
+		).
 		OpenFile("./migrations/0001_initial.sql").
 		Apply(
-			codemod.ModInsertLineAfter(
+			codemod.InsertLineAfter(
 				"-- +migrate Up",
 				`create table rockets (name text); insert into rockets values ('falcon'), ('saturn'), ('atlas');`,
 			),
 		).
 		CloseAndOpen("./pkg/rockets/models.go").
 		Apply(
-			codemod.ModAppendText(`
+			codemod.AppendText(`
 type Rocket struct {
 	Name string
 }`),
 		).
 		CloseAndOpen("./pkg/rockets/queries.go").
 		Apply(
-			codemod.ModAddGoImports([]string{"context"}),
-			codemod.ModAppendText(`
+			codemod.AddGoImports([]string{"context"}),
+			codemod.AppendText(`
 func (q *Queries) ListRockets(ctx context.Context) ([]Rocket, error) {
 	const query = "SELECT * FROM rockets"
 
@@ -81,10 +83,10 @@ func (q *Queries) ListRockets(ctx context.Context) ([]Rocket, error) {
 		).
 		CloseAndOpen("./pkg/rockets/router.go").
 		Apply(
-			codemod.ModInsertLineAfter("type NewRouterParams struct {", "Queries *Queries"),
-			codemod.ModInsertLineAfter("return &Router{", "queries: p.Queries,"),
-			codemod.ModInsertLineAfter("type Router struct {", "queries *Queries"),
-			codemod.ModInsertLineAfter("HandleListRockets(w http.ResponseWriter, r *http.Request) {", `
+			codemod.InsertLineAfter("type NewRouterParams struct {", "Queries *Queries"),
+			codemod.InsertLineAfter("return &Router{", "queries: p.Queries,"),
+			codemod.InsertLineAfter("type Router struct {", "queries *Queries"),
+			codemod.InsertLineAfter("HandleListRockets(w http.ResponseWriter, r *http.Request) {", `
 	rockets, err := ro.queries.ListRockets(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

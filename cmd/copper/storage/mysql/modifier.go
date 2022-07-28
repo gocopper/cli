@@ -19,14 +19,14 @@ dsn="user:password@/dbname"
 	)
 
 	return codemod.
-		New(wd).
+		OpenDir(wd).
 		OpenFile("./config/base.toml").
-		Apply(codemod.ModAppendText(csqlBaseConfig)).
+		Apply(codemod.AppendText(csqlBaseConfig)).
 		CloseAndOpen("./config/dev.toml").
-		Apply(codemod.ModAppendText(csqlDevConfig)).
+		Apply(codemod.AppendText(csqlDevConfig)).
 		CloseAndOpen("./cmd/app/wire.go").
-		Apply(codemod.ModAddGoImports([]string{"_ \"github.com/go-sql-driver/mysql\""})).
+		Apply(codemod.AddGoImports([]string{"_ \"github.com/go-sql-driver/mysql\""})).
 		CloseAndOpen("./cmd/migrate/wire.go").
-		Apply(codemod.ModAddGoImports([]string{"_ \"github.com/go-sql-driver/mysql\""})).
+		Apply(codemod.AddGoImports([]string{"_ \"github.com/go-sql-driver/mysql\""})).
 		CloseAndDone()
 }

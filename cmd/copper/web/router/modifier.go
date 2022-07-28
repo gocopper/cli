@@ -22,18 +22,18 @@ Logger clogger.Logger`, strcase.ToCamel(pkg)+" *"+pkg+".Router")
 	)
 
 	return codemod.
-		New(wd).
+		OpenDir(wd).
 		ExtractData(codemod.ExtractGoModulePath()).
-		CreateTemplateFiles(templatesFS, map[string]string{
+		Apply(codemod.CreateTemplateFiles(templatesFS, map[string]string{
 			"pkg": pkg,
-		}, false).
+		}, false)).
 		OpenFile("./pkg/app/handler.go").
 		Apply(
-			codemod.ModAddGoImports([]string{path.Join("{{.GoModule}}/pkg", pkg)}),
-			codemod.ModReplaceRegex("Logger +clogger\\.Logger", routerDecl),
-			codemod.ModInsertLineAfter("Routers: []chttp.Router{", "p."+strcase.ToCamel(pkg)+","),
+			codemod.AddGoImports([]string{path.Join("{{.GoModule}}/pkg", pkg)}),
+			codemod.ReplaceRegex("Logger +clogger\\.Logger", routerDecl),
+			codemod.InsertLineAfter("Routers: []chttp.Router{", "p."+strcase.ToCamel(pkg)+","),
 		).
 		CloseAndOpen(path.Join("./pkg", pkg, "wire.go")).
-		Apply(codemod.ModAddProviderToWireSet(routerWireProviders)).
+		Apply(codemod.AddProviderToWireSet(routerWireProviders)).
 		CloseAndDone()
 }

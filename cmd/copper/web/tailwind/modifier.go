@@ -12,17 +12,19 @@ var templatesFS embed.FS
 
 func Apply(wd string) error {
 	return codemod.
-		New(wd).
+		OpenDir(wd).
 		ExtractData(codemod.ExtractGoModulePath()).
 		ModifyData(func(data map[string]string) {
 			data["PackageJSONName"] = path.Base(data["GoModule"])
 		}).
-		CreateTemplateFiles(templatesFS, nil, true).
+		Apply(codemod.CreateTemplateFiles(templatesFS, nil, true)).
 		Cd("./web/").
-		Remove("./public/styles.css").
-		RunCmd("npm", "install", "-D", "tailwindcss").
+		Apply(
+			codemod.RemoveFile("./public/styles.css"),
+			codemod.RunCmd("npm", "install", "-D", "tailwindcss"),
+		).
 		OpenFile("./package.json").
-		Apply(codemod.ModAddJSONSection("scripts", map[string]string{
+		Apply(codemod.AddJSONSection("scripts", map[string]string{
 			"build": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --minify",
 			"dev":   "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --watch",
 		})).

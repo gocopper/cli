@@ -11,19 +11,19 @@ var templatesFS embed.FS
 
 func Apply(wd string) error {
 	return codemod.
-		New(wd).
+		OpenDir(wd).
 		ExtractData(codemod.ExtractGoModulePath()).
-		CreateTemplateFiles(templatesFS, nil, true).
+		Apply(codemod.CreateTemplateFiles(templatesFS, nil, true)).
 		OpenFile("./cmd/app/wire.go").
 		Apply(
-			codemod.ModAddGoImports([]string{"github.com/gocopper/copper/csql"}),
-			codemod.ModAddProviderToWireSet("csql.WireModule"),
+			codemod.AddGoImports([]string{"github.com/gocopper/copper/csql"}),
+			codemod.AddProviderToWireSet("csql.WireModule"),
 		).
 		CloseAndOpen("./pkg/app/handler.go").
 		Apply(
-			codemod.ModAddGoImports([]string{"github.com/gocopper/copper/csql"}),
-			codemod.ModInsertLineAfter("type NewHTTPHandlerParams struct {\n", "DatabaseTxMW *csql.TxMiddleware"),
-			codemod.ModInsertLineAfter("[]chttp.Middleware{\n", "p.DatabaseTxMW,"),
+			codemod.AddGoImports([]string{"github.com/gocopper/copper/csql"}),
+			codemod.InsertLineAfter("type NewHTTPHandlerParams struct {\n", "DatabaseTxMW *csql.TxMiddleware"),
+			codemod.InsertLineAfter("[]chttp.Middleware{\n", "p.DatabaseTxMW,"),
 		).
 		CloseAndDone()
 }

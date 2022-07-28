@@ -11,9 +11,9 @@ var templatesFS embed.FS
 
 func Apply(wd, module string) error {
 	return codemod.
-		New(wd).
-		CreateTemplateFiles(templatesFS, map[string]string{
+		OpenDir(wd).
+		Apply(codemod.CreateTemplateFiles(templatesFS, map[string]string{
 			"GoModule": module,
-		}, true).
+		}, true)).
 		Done()
 }

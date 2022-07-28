@@ -20,18 +20,20 @@ dev_mode=true
 	)
 
 	return codemod.
-		New(wd).
+		OpenDir(wd).
 		ExtractData(codemod.ExtractGoModulePath()).
 		ModifyData(func(data map[string]string) {
 			data["PackageJSONName"] = path.Base(data["GoModule"])
 		}).
-		CreateTemplateFiles(templatesFS, nil, true).
+		Apply(codemod.CreateTemplateFiles(templatesFS, nil, true)).
 		Cd("./web").
-		RunCmd("npm", "install", "react", "react-dom").
-		RunCmd("npm", "install", "-D", "@types/react", "@types/react-dom", "@vitejs/plugin-react", "vite").
-		RenameFile("public/styles.css", "src/styles.css").
+		Apply(
+			codemod.RunCmd("npm", "install", "react", "react-dom"),
+			codemod.RunCmd("npm", "install", "-D", "@types/react", "@types/react-dom", "@vitejs/plugin-react", "vite"),
+			codemod.RenameFile("public/styles.css", "src/styles.css"),
+		).
 		OpenFile("package.json").
-		Apply(codemod.ModAddJSONSection("scripts", map[string]string{
+		Apply(codemod.AddJSONSection("scripts", map[string]string{
 			"dev":     "vite",
 			"build":   "vite build",
 			"preview": "vite preview",
@@ -40,10 +42,10 @@ dev_mode=true
 		Cd("../").
 		OpenFile("./cmd/app/wire.go").
 		Apply(
-			codemod.ModAddGoImports([]string{"github.com/gocopper/pkg/vitejs"}),
-			codemod.ModAddProviderToWireSet(`vitejs.WireModule`),
+			codemod.AddGoImports([]string{"github.com/gocopper/pkg/vitejs"}),
+			codemod.AddProviderToWireSet(`vitejs.WireModule`),
 		).
 		CloseAndOpen("./config/dev.toml").
-		Apply(codemod.ModAppendText(viteJSConfig)).
+		Apply(codemod.AppendText(viteJSConfig)).
 		CloseAndDone()
 }

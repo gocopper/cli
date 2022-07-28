@@ -5,7 +5,7 @@ import (
 )
 
 func Apply(wd string) error {
-	var indexRoute = codemod.ModInsertCHTTPRouteParams{
+	var indexRoute = codemod.InsertCHTTPRouteParams{
 		Path:        "/",
 		Method:      "Get",
 		HandlerName: "HandleIndex",
@@ -20,13 +20,13 @@ func Apply(wd string) error {
 	}
 
 	return codemod.
-		New(wd).
+		OpenDir(wd).
 		OpenFile("./cmd/app/wire.go").
-		Apply(codemod.ModAddProviderToWireSet("chttp.WireModuleEmptyHTML")).
+		Apply(codemod.AddProviderToWireSet("chttp.WireModuleEmptyHTML")).
 		CloseAndOpen("./pkg/app/router.go").
 		Apply(
-			codemod.ModAddGoImports([]string{"net/http"}),
-			codemod.ModInsertCHTTPRoute(indexRoute),
+			codemod.AddGoImports([]string{"net/http"}),
+			codemod.InsertCHTTPRoute(indexRoute),
 		).
 		CloseAndDone()
 }

@@ -15,11 +15,11 @@ type ApplyParams struct {
 
 func Apply(wd string, p ApplyParams) error {
 	return codemod.
-		New(wd).
+		OpenDir(wd).
 		OpenFile(path.Join("./pkg", p.Pkg, "router.go")).
 		Apply(
-			codemod.ModAddGoImports([]string{"net/http"}),
-			codemod.ModInsertCHTTPRoute(codemod.ModInsertCHTTPRouteParams{
+			codemod.AddGoImports([]string{"net/http"}),
+			codemod.InsertCHTTPRoute(codemod.InsertCHTTPRouteParams{
 				Path:        p.Path,
 				Method:      p.Method,
 				HandlerName: p.Handler,

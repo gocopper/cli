@@ -1,7 +1,6 @@
 package sqlite3
 
 import (
-	"fmt"
 	"path"
 
 	"github.com/gocopper/cli/pkg/codemod"
@@ -9,26 +8,25 @@ import (
 
 func Apply(wd string) error {
 	var (
-		csqlConfig string
+		csqlConfig = `
+		
+[csql]
+dialect="sqlite3"
+dsn="./{{.DB}}.db"
+`
 	)
 
 	return codemod.
-		New(wd).
+		OpenDir(wd).
 		ExtractData(codemod.ExtractGoModulePath()).
-		Do(func(data map[string]string) error {
-			csqlConfig = fmt.Sprintf(`
-
-[csql]
-dialect="sqlite3"
-dsn="./%s.db"
-`, path.Base(data["GoModule"]))
-			return nil
+		ModifyData(func(data map[string]string) {
+			data["DB"] = path.Base(data["Module"])
 		}).
 		OpenFile("./config/base.toml").
-		Apply(codemod.ModAppendText(csqlConfig)).
+		Apply(codemod.AppendText(csqlConfig)).
 		CloseAndOpen("./cmd/app/wire.go").
-		Apply(codemod.ModAddGoImports([]string{"_ \"github.com/mattn/go-sqlite3\""})).
+		Apply(codemod.AddGoImports([]string{"_ \"github.com/mattn/go-sqlite3\""})).
 		CloseAndOpen("./cmd/migrate/wire.go").
-		Apply(codemod.ModAddGoImports([]string{"_ \"github.com/mattn/go-sqlite3\""})).
+		Apply(codemod.AddGoImports([]string{"_ \"github.com/mattn/go-sqlite3\""})).
 		CloseAndDone()
 }
