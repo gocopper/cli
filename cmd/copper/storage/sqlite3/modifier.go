@@ -13,6 +13,7 @@ func Apply(wd string) error {
 [csql]
 dialect="sqlite3"
 dsn="./{{.DB}}.db"
+max_open_connections=1
 `
 	)
 
@@ -20,7 +21,7 @@ dsn="./{{.DB}}.db"
 		OpenDir(wd).
 		ExtractData(codemod.ExtractGoModulePath()).
 		ModifyData(func(data map[string]string) {
-			data["DB"] = path.Base(data["Module"])
+			data["DB"] = path.Base(data["GoModule"])
 		}).
 		OpenFile("./config/base.toml").
 		Apply(codemod.AppendText(csqlConfig)).
