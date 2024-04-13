@@ -58,12 +58,12 @@ func setVitePort(projectDir string, port int) error {
 		return cerrors.New(err, "failed to update config/dev.toml", nil)
 	}
 
-	err = replaceTextInFile(path.Join(projectDir, "web/vite.config.js"),
+	err = replaceTextInFile(path.Join(projectDir, "web/vite.config.ts"),
 		"port: 3000",
 		fmt.Sprintf("port: %d", port),
 	)
 	if err != nil {
-		return cerrors.New(err, "failed to update web/vite.config.js", nil)
+		return cerrors.New(err, "failed to update web/vite.config.ts", nil)
 	}
 
 	return nil
@@ -113,9 +113,14 @@ func replaceTextInFile(path, old, new string) error {
 }
 
 func saveScreenshot(url, out string) error {
-	ctx, cancel := chromedp.NewContext(
-		context.Background(),
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.ExecPath("/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"),
 	)
+
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+
+	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
 	var buf []byte

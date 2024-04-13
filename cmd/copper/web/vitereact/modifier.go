@@ -29,13 +29,25 @@ dev_mode=true
 		Cd("./web").
 		Apply(
 			codemod.RunCmd("npm", "install", "react", "react-dom"),
-			codemod.RunCmd("npm", "install", "-D", "@types/react", "@types/react-dom", "@vitejs/plugin-react", "vite"),
+			codemod.RunCmd("npm", "install", "-D",
+				"@types/react",
+				"@types/react-dom",
+				"@typescript-eslint/eslint-plugin",
+				"@typescript-eslint/parser",
+				"@vitejs/plugin-react",
+				"eslint",
+				"eslint-plugin-react-hooks",
+				"eslint-plugin-react-refresh",
+				"typescript",
+				"vite",
+			),
 			codemod.RenameFile("public/styles.css", "src/styles.css"),
 		).
 		OpenFile("package.json").
 		Apply(codemod.AddJSONSection("scripts", map[string]string{
 			"dev":     "vite",
-			"build":   "vite build",
+			"build":   "tsc && vite build",
+			"lint":    "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
 			"preview": "vite preview",
 		})).
 		Close().
