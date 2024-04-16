@@ -11,9 +11,9 @@ export default defineConfig({
   },
   build: {
     outDir: 'build/static',
-    manifest: true,
+    manifest: 'manifest.json',
     rollupOptions: {
-      input: 'src/main.ts'
+      input: 'src/main.tsx'
     }
   }
 })
