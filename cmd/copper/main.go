@@ -25,7 +25,6 @@ func main() {
 	subcommands.Register(NewScaffoldPkgCmd(terminal), "scaffold")
 	subcommands.Register(NewScaffoldQueriesCmd(terminal), "scaffold")
 	subcommands.Register(NewScaffoldRouterCmd(terminal), "scaffold")
-	subcommands.Register(NewScaffoldRouteCmd(terminal), "scaffold")
 
 	flag.Parse()
 
