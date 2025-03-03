@@ -1,0 +1,9 @@
+package app
+
+import (
+	"github.com/gocopper/copper/cmetrics"
+)
+
+func MetricsRegistry() *cmetrics.Registry {
+	return cmetrics.NewRegistry(cmetrics.NewRegistryParams{})
+}

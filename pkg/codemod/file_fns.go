@@ -22,6 +22,12 @@ func ReplaceRegex(expr, text string) FileFn {
 	}
 }
 
+func InsertTextAfter(find, insert string) FileFn {
+	return func(contents string, data map[string]string) (string, error) {
+		return strings.Replace(contents, find, find+insert, 1), nil
+	}
+}
+
 func InsertText(text string, offset int) FileFn {
 	return func(contents string, data map[string]string) (string, error) {
 		var (
@@ -34,6 +40,25 @@ func InsertText(text string, offset int) FileFn {
 		newContents = append(newContents, beg...)
 		newContents = append(newContents, []byte(text)...)
 		newContents = append(newContents, end...)
+
+		return string(newContents), nil
+	}
+}
+
+func InsertLineAtLineNum(lineNum int, text string) FileFn {
+	return func(contents string, data map[string]string) (string, error) {
+		var (
+			newContents = make([]byte, 0)
+
+			lines = strings.Split(contents, "\n")
+		)
+
+		for i, line := range lines {
+			if i+1 == lineNum {
+				newContents = append(newContents, []byte(text+"\n")...)
+			}
+			newContents = append(newContents, []byte(line+"\n")...)
+		}
 
 		return string(newContents), nil
 	}

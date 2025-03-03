@@ -15,7 +15,7 @@ import (
 	"github.com/gocopper/cli/cmd/copper/storage/storagebase"
 	"github.com/gocopper/cli/cmd/copper/web/frontendnone"
 	"github.com/gocopper/cli/cmd/copper/web/tailwind"
-	"github.com/gocopper/cli/cmd/copper/web/tailwindpostcss"
+	"github.com/gocopper/cli/cmd/copper/web/tailwindvite"
 	"github.com/gocopper/cli/cmd/copper/web/vitereact"
 	"github.com/gocopper/cli/cmd/copper/web/webbase"
 	"github.com/gocopper/cli/pkg/mk"
@@ -111,9 +111,9 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			return subcommands.ExitFailure
 		}
 
-		err = tailwindpostcss.Apply(wd)
+		err = tailwindvite.Apply(wd)
 		if err != nil {
-			c.term.TaskFailed(cerrors.New(err, "failed to apply tailwind (postcss) code mod", nil))
+			c.term.TaskFailed(cerrors.New(err, "failed to apply tailwind (vite) code mod", nil))
 			return subcommands.ExitFailure
 		}
 	default:

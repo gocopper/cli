@@ -21,12 +21,12 @@ func Apply(wd string) error {
 		Cd("./web/").
 		Apply(
 			codemod.RemoveFile("./public/styles.css"),
-			codemod.RunCmd("npm", "install", "-D", "tailwindcss"),
+			codemod.RunCmd("npm", "install", "tailwindcss"),
 		).
 		OpenFile("./package.json").
 		Apply(codemod.AddJSONSection("scripts", map[string]string{
-			"build": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --minify",
-			"dev":   "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --watch",
+			"build": "npx @tailwindcss/cli -i ./src/styles.css -o ./build/static/styles.css --minify",
+			"dev":   "npx @tailwindcss/cli -i ./src/styles.css -o ./public/styles.css --watch",
 		})).
 		CloseAndDone()
 }
