@@ -20,7 +20,7 @@ func main() {
 	)
 
 	flag.StringVar(&cliPkgPath, "pkg", "", "Path to copper cli's main pkg")
-	flag.StringVar(&screenshotsOutDir, "out", ".", "Path to a directory where screenshots will be saved")
+	flag.StringVar(&screenshotsOutDir, "out", "screenshots", "Path to a directory where screenshots will be saved")
 
 	flag.Parse()
 

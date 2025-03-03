@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -39,6 +40,11 @@ func runTask(s *ScreenGrabber) error {
 		screenshotIndexFilePath   = path.Join(s.ScreenshotsOutDir, fmt.Sprintf("%s_index.png", s.Stack.Name))
 		screenshotRocketsFilePath = path.Join(s.ScreenshotsOutDir, fmt.Sprintf("%s_rockets.png", s.Stack.Name))
 	)
+
+	err = os.Mkdir(s.ScreenshotsOutDir, os.FileMode(0755))
+	if err != nil && !errors.Is(err, os.ErrExist) {
+		return cerrors.New(err, "failed to create screenshots directory", nil)
+	}
 
 	err = codemod.
 		OpenDir(s.CLIPkgPath).

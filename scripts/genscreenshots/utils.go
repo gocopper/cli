@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -113,11 +114,7 @@ func replaceTextInFile(path, old, new string) error {
 }
 
 func saveScreenshot(url, out string) error {
-	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.ExecPath("/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"),
-	)
-
-	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), chromedp.DefaultExecAllocatorOptions[:]...)
 	defer cancel()
 
 	ctx, cancel := chromedp.NewContext(allocCtx)
