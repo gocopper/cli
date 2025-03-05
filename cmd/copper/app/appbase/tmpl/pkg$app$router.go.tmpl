@@ -6,19 +6,16 @@ import (
 )
 
 type NewRouterParams struct {
-	RW     *chttp.ReaderWriter
 	Logger clogger.Logger
 }
 
 func NewRouter(p NewRouterParams) *Router {
 	return &Router{
-		rw:     p.RW,
 		logger: p.Logger,
 	}
 }
 
 type Router struct {
-	rw     *chttp.ReaderWriter
 	logger clogger.Logger
 }
 

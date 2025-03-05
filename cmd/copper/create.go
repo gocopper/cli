@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/gocopper/cli/cmd/copper/web/inertiareact"
 	"path"
 	"strings"
 
@@ -14,9 +15,9 @@ import (
 	"github.com/gocopper/cli/cmd/copper/storage/sqlite3"
 	"github.com/gocopper/cli/cmd/copper/storage/storagebase"
 	"github.com/gocopper/cli/cmd/copper/web/frontendnone"
+	"github.com/gocopper/cli/cmd/copper/web/react"
 	"github.com/gocopper/cli/cmd/copper/web/tailwind"
 	"github.com/gocopper/cli/cmd/copper/web/tailwindvite"
-	"github.com/gocopper/cli/cmd/copper/web/vitereact"
 	"github.com/gocopper/cli/cmd/copper/web/webbase"
 	"github.com/gocopper/cli/pkg/mk"
 	"github.com/gocopper/cli/pkg/term"
@@ -51,7 +52,7 @@ func (c *CreateCmd) Usage() string {
 }
 
 func (c *CreateCmd) SetFlags(f *flag.FlagSet) {
-	f.StringVar(&c.frontend, "frontend", "go", "go, go:tailwind, vite:react, vite:react:tailwind, none")
+	f.StringVar(&c.frontend, "frontend", "go", "go, go:tailwind, react, react:tailwind, inertia:react, inertia:react:tailwind, none")
 	f.StringVar(&c.storage, "storage", "sqlite3", "sqlite3, postgres, mysql, none")
 }
 
@@ -98,20 +99,48 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 			c.term.TaskFailed(cerrors.New(err, "failed to apply go:tailwind code mod", nil))
 			return subcommands.ExitFailure
 		}
-	case "vite:react":
-		err = vitereact.Apply(wd)
+	case "react":
+		err = react.Apply(wd)
 		if err != nil {
-			c.term.TaskFailed(cerrors.New(err, "failed to apply vite:react code mod", nil))
+			c.term.TaskFailed(cerrors.New(err, "failed to apply react code mod", nil))
 			return subcommands.ExitFailure
 		}
-	case "vite:react:tailwind":
-		err = vitereact.Apply(wd)
+	case "react:tailwind":
+		err = react.Apply(wd)
 		if err != nil {
-			c.term.TaskFailed(cerrors.New(err, "failed to apply vite:react code mod", nil))
+			c.term.TaskFailed(cerrors.New(err, "failed to apply react code mod", nil))
 			return subcommands.ExitFailure
 		}
 
-		err = tailwindvite.Apply(wd)
+		err = tailwindvite.Apply(wd, false)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply tailwind (vite) code mod", nil))
+			return subcommands.ExitFailure
+		}
+	case "inertia:react":
+		err = react.Apply(wd)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply react code mod", nil))
+			return subcommands.ExitFailure
+		}
+
+		err = inertiareact.Apply(wd)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply inertia (react) code mod", nil))
+		}
+	case "inertia:react:tailwind":
+		err = react.Apply(wd)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply react code mod", nil))
+			return subcommands.ExitFailure
+		}
+
+		err = inertiareact.Apply(wd)
+		if err != nil {
+			c.term.TaskFailed(cerrors.New(err, "failed to apply inertia (react) code mod", nil))
+		}
+
+		err = tailwindvite.Apply(wd, true)
 		if err != nil {
 			c.term.TaskFailed(cerrors.New(err, "failed to apply tailwind (vite) code mod", nil))
 			return subcommands.ExitFailure

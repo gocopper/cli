@@ -1,4 +1,4 @@
-package vitereact
+package react
 
 import (
 	"embed"

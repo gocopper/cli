@@ -6,10 +6,18 @@ import (
 	"github.com/gocopper/cli/pkg/codemod"
 )
 
-//go:embed tmpl/*
-var templatesFS embed.FS
+//go:embed reacttmpl/*
+var reactTemplatesFS embed.FS
 
-func Apply(wd string) error {
+//go:embed inertiatmpl/*
+var inertiaTemplatesFS embed.FS
+
+func Apply(wd string, inertia bool) error {
+	templatesFS := reactTemplatesFS
+	if inertia {
+		templatesFS = inertiaTemplatesFS
+	}
+
 	return codemod.
 		OpenDir(wd).
 		Apply(codemod.CreateTemplateFiles(templatesFS, nil, true)).

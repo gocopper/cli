@@ -1,0 +1,9 @@
+{{"{{"}} define "content" {{"}}"}}
+
+{{"{{"}} if .Body {{"}}"}}
+    {{"{{"}} .Body {{"}}"}}
+{{"{{"}} else {{"}}"}}
+    <div id="app" data-page="{{"{{"}} mustToRawJson .Page {{"}}"}}"></div>
+{{"{{"}} end {{"}}"}}
+
+{{"{{"}} end {{"}}"}}

@@ -26,7 +26,7 @@ render_html_error = true
 			Method:      "Get",
 			HandlerName: "HandleIndexPage",
 			HandlerBody: `
-	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
+	ro.html.WriteHTML(w, r, chttp.WriteHTMLParams{
 		PageTemplate: "index.html",
 	})`}
 	)
@@ -44,6 +44,9 @@ render_html_error = true
 		CloseAndOpen("./pkg/app/router.go").
 		Apply(
 			codemod.AddGoImports([]string{"net/http"}),
+			codemod.InsertLineAfter("type NewRouterParams struct {", "HTML *chttp.HTMLReaderWriter"),
+			codemod.InsertLineAfter("return &Router{", "html: p.HTML,"),
+			codemod.InsertLineAfter("type Router struct {", "html *chttp.HTMLReaderWriter"),
 			codemod.InsertCHTTPRoute(indexPageRoute),
 		).
 		CloseAndOpen("./config/dev.toml").

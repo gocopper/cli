@@ -27,8 +27,8 @@ func main() {
 	var stacks = []Stack{
 		{Name: "go"},
 		{Name: "go:tailwind", RunNPM: true},
-		{Name: "vite:react", RunNPM: true, HasVite: true},
-		{Name: "vite:react:tailwind", RunNPM: true, HasVite: true},
+		{Name: "react", RunNPM: true, HasVite: true},
+		{Name: "react:tailwind", RunNPM: true, HasVite: true},
 		{Name: "none"},
 	}
 

@@ -1,0 +1,45 @@
+package app
+
+import (
+	"net/http"
+
+	"github.com/gocopper/copper/chttp"
+	"github.com/gocopper/copper/clogger"
+	"github.com/gocopper/pkg/inertia"
+)
+
+type NewRouterParams struct {
+	Inertia *inertia.Renderer
+	Logger  clogger.Logger
+}
+
+func NewRouter(p NewRouterParams) *Router {
+	return &Router{
+		inertia: p.Inertia,
+		logger:  p.Logger,
+	}
+}
+
+type Router struct {
+	inertia *inertia.Renderer
+	logger  clogger.Logger
+}
+
+func (ro *Router) Routes() []chttp.Route {
+	return []chttp.Route{
+		{
+			Path:    "/",
+			Methods: []string{http.MethodGet},
+			Handler: ro.HandleIndexPage,
+		},
+	}
+}
+
+func (ro *Router) HandleIndexPage(w http.ResponseWriter, r *http.Request) {
+	ro.inertia.Render(w, r, inertia.RenderParams{
+		Component: "Index",
+		Props: map[string]any{
+			"stack": "inertia:react",
+		},
+	})
+}
