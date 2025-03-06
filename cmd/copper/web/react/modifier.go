@@ -45,7 +45,7 @@ dev_mode=true
 		).
 		OpenFile("package.json").
 		Apply(codemod.AddJSONSection("scripts", map[string]string{
-			"dev":     "vite",
+			"dev":     "vite --logLevel=warn --clearScreen=false",
 			"build":   "tsc && vite build",
 			"lint":    "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
 			"preview": "vite preview",

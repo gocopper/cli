@@ -2,20 +2,29 @@ package tailwindvite
 
 import (
 	"embed"
+	"github.com/gocopper/copper/cerrors"
+	"io/fs"
 
 	"github.com/gocopper/cli/pkg/codemod"
 )
 
-//go:embed reacttmpl/*
+//go:embed react/*
 var reactTemplatesFS embed.FS
 
-//go:embed inertiatmpl/*
+//go:embed inertia/*
 var inertiaTemplatesFS embed.FS
 
 func Apply(wd string, inertia bool) error {
-	templatesFS := reactTemplatesFS
+	var templatesFS fs.FS
+
+	subDir := "react"
 	if inertia {
-		templatesFS = inertiaTemplatesFS
+		subDir = "inertia"
+	}
+
+	templatesFS, err := fs.Sub(inertiaTemplatesFS, subDir)
+	if err != nil {
+		return cerrors.New(err, "failed to open template sub dir", map[string]any{"dir": subDir})
 	}
 
 	return codemod.

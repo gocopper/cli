@@ -52,7 +52,7 @@ func (c *MigrateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfac
 	c.term.TaskSucceeded()
 
 	c.term.Section("Run Database Migrations")
-	err = mk.NewRunner(".", "migrate.out").Run(ctx)
+	err = mk.NewRunner(".", "./build/migrate.out").Run(ctx)
 	if err != nil {
 		c.term.Error("Failed to run database migrations", err)
 		return subcommands.ExitFailure

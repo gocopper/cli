@@ -18,6 +18,12 @@ func ProjectHasMigrate(projectPath string) bool {
 	return err == nil
 }
 
+func ProjectHasWeb(projectPath string) bool {
+	_, err := os.Stat(path.Join(projectPath, "web", "package.json"))
+
+	return err == nil
+}
+
 func GoFmt(ctx context.Context, workingDir string) error {
 	cmd := exec.CommandContext(ctx, "gofmt", "-w", ".")
 

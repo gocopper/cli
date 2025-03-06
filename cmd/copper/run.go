@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/gocopper/cli/pkg/notifier"
 	"os"
 	"path"
 	"regexp"
@@ -26,6 +27,7 @@ type RunCmd struct {
 	term *term.Terminal
 
 	migrate bool
+	npm     bool
 	watch   bool
 
 	isFirstRun     bool
@@ -53,6 +55,10 @@ func (c *RunCmd) Usage() string {
 func (c *RunCmd) SetFlags(f *flag.FlagSet) {
 	if mk.ProjectHasMigrate(".") {
 		f.BoolVar(&c.migrate, "migrate", true, "Run database migrations")
+	}
+
+	if mk.ProjectHasWeb(".") {
+		f.BoolVar(&c.npm, "npm", true, "Run 'npm run dev'")
 	}
 
 	f.BoolVar(&c.watch, "watch", false, "Automatically restart project on source changes")
@@ -97,6 +103,11 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 		case <-w.Event:
 			if !c.isFirstRun {
 				c.term.Text("\n------------------------------------------------------------------------")
+
+				notifier.Notify(notifier.NotifyParams{
+					Title:   "File Changed",
+					Message: "Restarting server..",
+				})
 			}
 
 			cancelRun()
@@ -121,6 +132,8 @@ func (c *RunCmd) execute(ctx context.Context) subcommands.ExitStatus {
 	c.term.InProgressTask("Build Project")
 
 	migrate := c.migrate && c.isFirstRun
+	npm := c.npm && c.isFirstRun
+	notify := !c.isFirstRun
 
 	c.isFirstRunOnce.Do(func() {
 		c.isFirstRun = false
@@ -128,22 +141,44 @@ func (c *RunCmd) execute(ctx context.Context) subcommands.ExitStatus {
 
 	err := mk.NewBuilder(".", migrate).Build(ctx)
 	if err != nil {
+		notifier.Notify(notifier.NotifyParams{
+			Title:   "Build Failed",
+			Message: err.Error(),
+		})
 		c.term.TaskFailed(err)
 		return subcommands.ExitFailure
 	}
+
 	c.term.TaskSucceeded()
 
 	if migrate {
 		c.term.Section("Run Database Migrations")
-		err := mk.NewRunner(".", "migrate.out", "-set", "csql.migrations.source=\"dir\"").Run(ctx)
+		err := mk.NewRunner(".", "./build/migrate.out", "-set", "csql.migrations.source=\"dir\"").Run(ctx)
 		if err != nil {
 			c.term.Error("Failed to run database migrations", err)
 			return subcommands.ExitFailure
 		}
 	}
 
+	if npm {
+		c.term.Section("npm run dev")
+		err := mk.NewBackgroundRunner(c.term, "./web", "npm", "run", "dev").Run(ctx)
+		if err != nil {
+			c.term.Error("Failed to run 'npm run dev'", err)
+			return subcommands.ExitFailure
+		}
+	}
+
+	if notify {
+		notifier.Notify(notifier.NotifyParams{
+			Title:       "Build Succeeded",
+			Message:     "Server started",
+			RemoveAfter: 3 * time.Second,
+		})
+	}
+
 	c.term.Section("App Logs")
-	err = mk.NewRunner(".", "app.out").Run(ctx)
+	err = mk.NewRunner(".", "./build/app.out").Run(ctx)
 	if err != nil {
 		c.term.Error("Failed to run app", err)
 		return subcommands.ExitFailure

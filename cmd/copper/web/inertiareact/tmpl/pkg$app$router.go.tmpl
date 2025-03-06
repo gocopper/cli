@@ -37,7 +37,7 @@ func (ro *Router) Routes() []chttp.Route {
 
 func (ro *Router) HandleIndexPage(w http.ResponseWriter, r *http.Request) {
 	ro.inertia.Render(w, r, inertia.RenderParams{
-		Component: "Index",
+		Component: "index",
 		Props: map[string]any{
 			"stack": "inertia:react",
 		},

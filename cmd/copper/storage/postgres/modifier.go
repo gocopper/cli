@@ -14,7 +14,7 @@ dialect="postgres"
 		csqlDevConfig = `
 
 [csql]
-dsn="user=postgres password=1234 host=127.0.0.1 port=5432 dbname=pg sslmode=disable"
+dsn = "postgresql://postgres:dev@127.0.0.1/postgres?sslmode=disable"
 `
 	)
 
