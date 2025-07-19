@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/gocopper/cli/pkg/pkgmgr"
 	"github.com/gocopper/copper/cerrors"
 	"github.com/gocopper/wire/pkg/wire"
 )
@@ -101,6 +102,10 @@ func goBuild(ctx context.Context, workDir, main string) error {
 	}
 
 	return nil
+}
+
+func GetPreferredPackageManager(webDir string) string {
+	return pkgmgr.GetPreferred(webDir)
 }
 
 func multiErrors(errs []error) error {

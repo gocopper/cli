@@ -190,13 +190,15 @@ func (c *CreateCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface
 	c.term.Box(fmt.Sprintf(`$ cd %s && copper run -watch`, wd))
 
 	if c.frontend == "go:tailwind" {
+		packageManager := mk.GetPreferredPackageManager(path.Join(wd, "web"))
 		c.term.Section("Run Tailwind Server")
-		c.term.Box(fmt.Sprintf(`$ cd %s/web && npm run dev`, wd))
+		c.term.Box(fmt.Sprintf(`$ cd %s/web && %s run dev`, wd, packageManager))
 	}
 
 	if strings.Contains(c.frontend, "vite") {
+		packageManager := mk.GetPreferredPackageManager(path.Join(wd, "web"))
 		c.term.Section("Run Vite Server")
-		c.term.Box(fmt.Sprintf(`$ cd %s/web && npm run dev`, wd))
+		c.term.Box(fmt.Sprintf(`$ cd %s/web && %s run dev`, wd, packageManager))
 	}
 
 	return subcommands.ExitSuccess

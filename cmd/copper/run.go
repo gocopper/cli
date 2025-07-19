@@ -161,10 +161,11 @@ func (c *RunCmd) execute(ctx context.Context) subcommands.ExitStatus {
 	}
 
 	if npm {
-		c.term.Section("npm run dev")
-		err := mk.NewBackgroundRunner(c.term, "./web", "npm", "run", "dev").Run(ctx)
+		packageManager := mk.GetPreferredPackageManager("./web")
+		c.term.Section(packageManager + " run dev")
+		err := mk.NewBackgroundRunner(c.term, "./web", packageManager, "run", "dev").Run(ctx)
 		if err != nil {
-			c.term.Error("Failed to run 'npm run dev'", err)
+			c.term.Error("Failed to run '"+packageManager+" run dev'", err)
 			return subcommands.ExitFailure
 		}
 	}

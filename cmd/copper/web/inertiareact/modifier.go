@@ -16,7 +16,7 @@ func Apply(wd string) error {
 		Apply(
 			codemod.RemoveFile("./src/App.tsx"),
 			codemod.RemoveFile("./src/pages/index.html"),
-			codemod.RunCmd("npm", "install", "@inertiajs/react@2"),
+			codemod.RunPackageManagerCmd("install", "@inertiajs/react@2"),
 		).
 		Cd("../").
 		OpenFile("./cmd/app/wire.go").

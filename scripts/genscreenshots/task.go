@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gocopper/cli/pkg/codemod"
+	"github.com/gocopper/cli/pkg/pkgmgr"
 	"github.com/gocopper/copper/cerrors"
 )
 
@@ -135,9 +136,10 @@ func (q *Queries) ListRockets(ctx context.Context) ([]Rocket, error) {
 	defer func() { _ = killCmd(cmd) }()
 
 	if s.Stack.RunNPM {
-		npmCmd, err := startCmd(path.Join(projectDir, "web"), "npm", "run", "dev")
+		packageManager := pkgmgr.GetPreferred(path.Join(projectDir, "web"))
+		npmCmd, err := startCmd(path.Join(projectDir, "web"), packageManager, "run", "dev")
 		if err != nil {
-			return cerrors.New(err, "failed to run npm", map[string]interface{}{
+			return cerrors.New(err, "failed to run "+packageManager, map[string]interface{}{
 				"dir": projectDir,
 			})
 		}

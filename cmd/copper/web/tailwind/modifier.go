@@ -21,7 +21,7 @@ func Apply(wd string) error {
 		Cd("./web/").
 		Apply(
 			codemod.RemoveFile("./public/styles.css"),
-			codemod.RunCmd("npm", "install", "tailwindcss"),
+			codemod.RunPackageManagerCmd("install", "tailwindcss"),
 		).
 		OpenFile("./package.json").
 		Apply(codemod.AddJSONSection("scripts", map[string]string{

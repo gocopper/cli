@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path"
+
+	"github.com/gocopper/cli/pkg/pkgmgr"
 )
 
 type DirFn func(wd string, data map[string]string) error
@@ -31,6 +33,17 @@ func RemoveFile(fp string) DirFn {
 func RunCmd(name string, arg ...string) DirFn {
 	return func(wd string, data map[string]string) error {
 		cmd := exec.Command(name, arg...)
+		cmd.Dir = wd
+
+		return cmd.Run()
+	}
+}
+
+func RunPackageManagerCmd(subcommand string, arg ...string) DirFn {
+	return func(wd string, data map[string]string) error {
+		packageManager := pkgmgr.GetPreferred(wd)
+		args := append([]string{subcommand}, arg...)
+		cmd := exec.Command(packageManager, args...)
 		cmd.Dir = wd
 
 		return cmd.Run()

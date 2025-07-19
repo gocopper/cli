@@ -28,8 +28,8 @@ dev_mode=true
 		Apply(codemod.CreateTemplateFiles(templatesFS, nil, true)).
 		Cd("./web").
 		Apply(
-			codemod.RunCmd("npm", "install", "react", "react-dom"),
-			codemod.RunCmd("npm", "install", "-D",
+			codemod.RunPackageManagerCmd("install", "react", "react-dom"),
+			codemod.RunPackageManagerCmd("install", "-D",
 				"@types/react",
 				"@types/react-dom",
 				"@typescript-eslint/eslint-plugin",
