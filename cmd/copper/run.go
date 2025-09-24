@@ -40,6 +40,8 @@ type RunCmd struct {
 	processLock    sync.Mutex
 	shutdownCtx    context.Context
 	shutdownCancel context.CancelFunc
+	executing      bool
+	executeLock    sync.Mutex
 }
 
 func (c *RunCmd) Name() string {
@@ -108,8 +110,8 @@ func (c *RunCmd) killAllProcesses() {
 		}(cmd)
 	}
 
-	// Wait for all processes or timeout after 10 seconds
-	timeout := time.After(10 * time.Second)
+	// Wait for all processes or timeout after 3 seconds
+	timeout := time.After(3 * time.Second)
 	for i := 0; i < len(cmds); i++ {
 		select {
 		case <-done:
@@ -156,6 +158,7 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 	w := watcher.New()
 
 	w.SetMaxEvents(1)
+	w.FilterOps(watcher.Write, watcher.Create)
 
 	err := w.AddRecursive(path.Join(".", "pkg"))
 	if err != nil {
@@ -182,26 +185,63 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 
 	runCtx, cancelRun := context.WithCancel(ctx)
 
+	// Channel for restart requests with debouncing
+	restartChan := make(chan bool, 1)
+	var lastFileChange time.Time
+
+	// Single restart handler goroutine
+	go func() {
+		for {
+			select {
+			case <-restartChan:
+				// Wait for debounce period
+				time.Sleep(500 * time.Millisecond)
+
+				// Check if more recent file changes happened
+				if time.Since(lastFileChange) < 450*time.Millisecond {
+					continue
+				}
+
+				if !c.isFirstRun {
+					c.term.Text("\n------------------------------------------------------------------------")
+					notifier.Notify(notifier.NotifyParams{
+						Title:   "File Changed",
+						Message: "Restarting server..",
+					})
+				}
+
+				// Cancel current execution and kill processes
+				cancelRun()
+				c.killAllProcesses()
+
+				// Wait a moment for clean shutdown
+				time.Sleep(200 * time.Millisecond)
+
+				// Start new execution
+				runCtx, cancelRun = context.WithCancel(ctx)
+				go func() {
+					c.execute(runCtx)
+				}()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	// Start initial execution
+	go func() {
+		c.execute(runCtx)
+	}()
+
 	for {
 		select {
 		case <-w.Event:
-			if !c.isFirstRun {
-				c.term.Text("\n------------------------------------------------------------------------")
-
-				notifier.Notify(notifier.NotifyParams{
-					Title:   "File Changed",
-					Message: "Restarting server..",
-				})
+			lastFileChange = time.Now()
+			// Non-blocking send to restart channel
+			select {
+			case restartChan <- true:
+			default:
 			}
-
-			cancelRun()
-			c.killAllProcesses()
-			runCtx.Done()
-
-			runCtx, cancelRun = context.WithCancel(ctx)
-			go func() {
-				c.execute(runCtx)
-			}()
 		case err := <-w.Error:
 			cancelRun()
 			c.term.Error("Error while watching pkg dir", err)
@@ -217,6 +257,16 @@ func (c *RunCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 }
 
 func (c *RunCmd) execute(ctx context.Context) subcommands.ExitStatus {
+	c.executeLock.Lock()
+	c.executing = true
+	c.executeLock.Unlock()
+
+	defer func() {
+		c.executeLock.Lock()
+		c.executing = false
+		c.executeLock.Unlock()
+	}()
+
 	c.term.InProgressTask("Build Project")
 
 	migrate := c.migrate && c.isFirstRun
