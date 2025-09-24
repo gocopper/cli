@@ -38,47 +38,47 @@ type Runner struct {
 	Term       *term.Terminal
 }
 
-func (r *Runner) Run(ctx context.Context) error {
-	const SignalKilled = 9
+func (r *Runner) RunBackground(ctx context.Context) (*exec.Cmd, error) {
+	if !r.Background {
+		return nil, cerrors.New(nil, "runner is not configured for background execution", nil)
+	}
 
 	cmd := exec.CommandContext(ctx, r.Binary, r.Args...)
 	cmd.Dir = r.WorkingDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if r.Background {
-		if err := cmd.Start(); err != nil {
-			return cerrors.New(err, "failed to start background command", nil)
-		}
-
-		outputCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-		defer cancel()
-
-		go func() {
-			err := cmd.Wait()
-			if err != nil {
-				var exitErr *exec.ExitError
-				if ok := errors.As(err, &exitErr); !ok {
-					r.Term.Error("Background cmd did not exit cleanly", err)
-					return
-				}
-
-				status := exitErr.Sys().(syscall.WaitStatus)
-				if status.Signaled() && status.Signal() != SignalKilled {
-					r.Term.Error("Background cmd exited with signal: "+status.Signal().String(), nil)
-				}
-			}
-		}()
-
-		<-outputCtx.Done()
-
-		if errors.Is(outputCtx.Err(), context.DeadlineExceeded) {
-			cmd.Stdout = nil
-			cmd.Stderr = nil
-		}
-
-		return nil
+	if err := cmd.Start(); err != nil {
+		return nil, cerrors.New(err, "failed to start background command", nil)
 	}
+
+	outputCtx, outputCancel := context.WithTimeout(ctx, 3*time.Second)
+
+	go func() {
+		defer outputCancel()
+		cmd.Wait()
+	}()
+
+	<-outputCtx.Done()
+	if errors.Is(outputCtx.Err(), context.DeadlineExceeded) {
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+	}
+
+	return cmd, nil
+}
+
+func (r *Runner) Run(ctx context.Context) error {
+	if r.Background {
+		return cerrors.New(nil, "use RunBackground() for background processes", nil)
+	}
+
+	const SignalKilled = 9
+
+	cmd := exec.CommandContext(ctx, r.Binary, r.Args...)
+	cmd.Dir = r.WorkingDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	err := cmd.Run()
 	if err != nil {
