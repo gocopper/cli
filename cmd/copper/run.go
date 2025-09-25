@@ -329,8 +329,11 @@ func (c *RunCmd) execute(ctx context.Context) subcommands.ExitStatus {
 
 	err = cmd.Wait()
 	if err != nil {
-		c.term.Error("App exited with error", err)
-		return subcommands.ExitFailure
+		// Ignore "no child processes" error which happens when process was already killed
+		if err.Error() != "wait: no child processes" {
+			c.term.Error("App exited with error", err)
+			return subcommands.ExitFailure
+		}
 	}
 
 	return subcommands.ExitSuccess
